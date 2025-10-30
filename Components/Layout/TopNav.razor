@@ -1,0 +1,82 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+
+<nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">
+            <img src="/images/logo.png" alt="Logo" class="navbar-logo" />
+            <span>Gift of the Givers</span>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNavBar" aria-controls="topNavBar" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="topNavBar">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="donation">
+                        <span class="oi oi-gift" aria-hidden="true"></span> Donation
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="volunteer">
+                        <span class="oi oi-people" aria-hidden="true"></span> Volunteer
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="disaster-reporting">
+                        <span class="oi oi-warning" aria-hidden="true"></span> Disaster Reporting
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="team">
+                        <span class="oi oi-list-rich" aria-hidden="true"></span> Team
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="audit-donations">
+                        <span class="oi oi-clipboard" aria-hidden="true"></span> Audit Donations
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="incidents">
+                        <span class="oi oi-inbox" aria-hidden="true"></span> Incoming Incidents
+                    </NavLink>
+                </li>
+                
+                <!--<li class="nav-item">
+                    <NavLink class="nav-link" href="auth">
+                        <span class="oi oi-lock-locked" aria-hidden="true"></span> Auth Required
+                    </NavLink>
+                </li>-->
+            </ul>
+
+            <!--<ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <AuthorizeView>
+                        <Authorized>
+                            <a class="nav-link" href="Account/Manage">
+                                <span class="oi oi-person" aria-hidden="true"></span> Hello, @context.User.Identity?.Name
+                            </a>
+                            <form action="Account/Logout" method="post" class="d-inline">
+                                <AntiforgeryToken />
+                                <button type="submit" class="btn-nav-logout">
+                                    <span class="oi oi-account-logout" aria-hidden="true"></span> Logout
+                                </button>
+                            </form>
+                        </Authorized>
+                        <NotAuthorized>
+                            <NavLink class="nav-link" href="Account/Register">
+                                <span class="oi oi-person" aria-hidden="true"></span> Register
+                            </NavLink>
+                            <NavLink class="nav-link" href="Account/Login">
+                                <span class="oi oi-account-login" aria-hidden="true"></span> Login
+                            </NavLink>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </li>
+            </ul>-->
+        </div>
+    </div>
+</nav>
