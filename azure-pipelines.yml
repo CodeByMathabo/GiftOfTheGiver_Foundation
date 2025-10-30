@@ -1,39 +1,48 @@
-# This is a comment to trigger a new permission check
 resources:
   repositories:
-  - repository: AzureSyncRepo # This is a new name (alias) we are giving it
+  - repository: AzureSyncRepo # alias
     type: git
-    # This is your Azure Repo in the format: ProjectName/RepoName
     name: 'Gift of the Givers Foundation/GiftOfTheGiver_Foundation'
 
-# This pipeline triggers on any push to the 'master' branch in your GitHub repo
 trigger:
-- master
+  branches:
+    include:
+    - master
 
-# Use a standard Microsoft-hosted agent to run the job
 pool:
   vmImage: 'ubuntu-latest'
 
-# This allows the pipeline to access the System.AccessToken
-# which is needed to authenticate the push to your Azure Repo
-jobs:
-- job: SyncRepo
-  steps:
-  - checkout: self
-    persistCredentials: true # This is key for authentication
+stages:
+- stage: __default
+  jobs:
+  - job: SyncRepo
+    steps:
     
-  - script: |
-      echo "Configuring Git identity..."
-      git config --global user.email "pipeline@azuredevops.com"
-      git config --global user.name "Azure DevOps Pipeline"
-      
-      echo "Adding Azure Repo as a remote..."
-      # This command builds the remote URL using the pipeline's built-in token
-      # It is pushing to your 'GiftOfTheGiver_Foundation' repo
-      git remote add azure https://$(System.AccessToken)@dev.azure.com/ST10363312/Gift%20of%20the%20Givers%20Foundation/_git/GiftOfTheGiver_Foundation
-      
-      echo "Pushing code to Azure Repo..."
-      # This force-pushes the 'master' branch from GitHub to the 'master' branch in Azure
-      git push -f azure HEAD:master
-      
-    displayName: 'Sync GitHub to Azure Repos'
+    # The repo to push FROM
+    - checkout: self
+      persistCredentials: true
+
+    # This forces the pipeline to ask for permission for the Azure Repo
+    # We check it out to a dummy path because we don't need its files.
+    - checkout: AzureSyncRepo  # This MUST match the 'repository:' alias above
+      path: 'azure-repo-dummy' # A temporary folder name
+
+    # original script, now with a 'cd' command
+    - task: CmdLine@2
+      displayName: 'Sync GitHub to Azure Repos'
+      inputs:
+        script: |
+          echo "Setting working directory..."
+          # We must run the git commands inside the GitHub repo's folder
+          cd $(Pipeline.Workspace)/s 
+
+          echo "Configuring Git identity..."
+          git config --global user.email "pipeline@azuredevops.com"
+          git config --global user.name "Azure DevOps Pipeline"
+
+          echo "Adding Azure Repo as a remote..."
+          # This URL is the same and should now work
+          git remote add azure https://$(System.AccessToken)@dev.azure.com/ST10363312/Gift%20of%20the%20Givers%20Foundation/_git/GiftOfTheGiver_Foundation
+
+          echo "Pushing code to Azure Repo..."
+          git push -f azure HEAD:master
