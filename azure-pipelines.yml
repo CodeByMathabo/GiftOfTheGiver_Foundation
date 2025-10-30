@@ -1,3 +1,10 @@
+resources:
+  repositories:
+  - repository: AzureSyncRepo # This is a new name (alias) we are giving it
+    type: git
+    # This is your Azure Repo in the format: ProjectName/RepoName
+    name: 'Gift of the Givers Foundation/GiftOfTheGiver_Foundation'
+
 # This pipeline triggers on any push to the 'master' branch in your GitHub repo
 trigger:
 - master
