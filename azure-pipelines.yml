@@ -26,6 +26,6 @@ jobs:
       
       echo "Pushing code to Azure Repo..."
       # This force-pushes the 'master' branch from GitHub to the 'master' branch in Azure
-      git push -f azure master
+      git push -f azure HEAD:master
       
     displayName: 'Sync GitHub to Azure Repos'
