@@ -1,13 +1,12 @@
+# Block is REQUIRED to get permission for the AccessToken
 resources:
   repositories:
-  - repository: AzureSyncRepo # alias
+  - repository: AzureSyncRepo 
     type: git
     name: 'Gift of the Givers Foundation/GiftOfTheGiver_Foundation'
 
 trigger:
-  branches:
-    include:
-    - master
+- master
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -18,34 +17,28 @@ stages:
   - job: SyncRepo
     steps:
     
-    # The repo to push FROM
-    - checkout: self
-      persistCredentials: true
+    # This forces the permission check
+    - checkout: AzureSyncRepo
+      path: 'azure-repo-dummy'
 
-    # This forces the pipeline to ask for permission for the Azure Repo
-    # We check it out to a dummy path because we don't need its files.
-    - checkout: AzureSyncRepo  # This MUST match the 'repository:' alias above
-      path: 'azure-repo-dummy' # A temporary folder name
-
-    # original script, now with a 'cd' command
+    # Manual script
     - task: CmdLine@2
       displayName: 'Sync GitHub to Azure Repos'
       inputs:
         script: |
-          echo "--- DEBUG: Listing all files in the Workspace ---"
-          ls -R $(Pipeline.Workspace)
-          echo "--- END DEBUG ---"
-
-          echo "Setting working directory..."
-          # My previous 'cd' path was wrong. We will find the correct path from the debug log.
-          # For now, let's try the other possibility:
-          cd $(Pipeline.Workspace)/s/GiftOfTheGiver_Foundation
-
+          echo "Cloning GitHub repository..."
+          # Since it's public, we don't need a token here
+          git clone https://github.com/CodeByMathabo/GiftOfTheGiver_Foundation.git github-repo
+          
+          echo "Changing to GitHub repo directory..."
+          cd github-repo
+          
           echo "Configuring Git identity..."
           git config --global user.email "pipeline@azuredevops.com"
           git config --global user.name "Azure DevOps Pipeline"
 
           echo "Adding Azure Repo as a remote..."
+          # This command uses the AccessToken we got permission for
           git remote add azure https://$(System.AccessToken)@dev.azure.com/ST10363312/Gift%20of%20the%20Givers%20Foundation/_git/GiftOfTheGiver_Foundation
 
           echo "Pushing code to Azure Repo..."
