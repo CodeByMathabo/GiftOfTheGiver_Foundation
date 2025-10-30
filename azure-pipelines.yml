@@ -1,0 +1,31 @@
+# This pipeline triggers on any push to the 'master' branch in your GitHub repo
+trigger:
+- master
+
+# Use a standard Microsoft-hosted agent to run the job
+pool:
+  vmImage: 'ubuntu-latest'
+
+# This allows the pipeline to access the System.AccessToken
+# which is needed to authenticate the push to your Azure Repo
+jobs:
+- job: SyncRepo
+  steps:
+  - checkout: self
+    persistCredentials: true # This is key for authentication
+    
+  - script: |
+      echo "Configuring Git identity..."
+      git config --global user.email "pipeline@azuredevops.com"
+      git config --global user.name "Azure DevOps Pipeline"
+      
+      echo "Adding Azure Repo as a remote..."
+      # This command builds the remote URL using the pipeline's built-in token
+      # It is pushing to your 'GiftOfTheGiver_Foundation' repo
+      git remote add azure https://$(System.AccessToken)@dev.azure.com/ST10363312/Gift%20of%20the%20Givers%20Foundation/_git/GiftOfTheGiver_Foundation
+      
+      echo "Pushing code to Azure Repo..."
+      # This force-pushes the 'master' branch from GitHub to the 'master' branch in Azure
+      git push -f azure master
+      
+    displayName: 'Sync GitHub to Azure Repos'
