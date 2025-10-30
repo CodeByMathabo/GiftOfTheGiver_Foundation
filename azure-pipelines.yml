@@ -32,16 +32,20 @@ stages:
       displayName: 'Sync GitHub to Azure Repos'
       inputs:
         script: |
+          echo "--- DEBUG: Listing all files in the Workspace ---"
+          ls -R $(Pipeline.Workspace)
+          echo "--- END DEBUG ---"
+
           echo "Setting working directory..."
-          # We must run the git commands inside the GitHub repo's folder
-          cd $(Pipeline.Workspace)/s 
+          # My previous 'cd' path was wrong. We will find the correct path from the debug log.
+          # For now, let's try the other possibility:
+          cd $(Pipeline.Workspace)/s/GiftOfTheGiver_Foundation
 
           echo "Configuring Git identity..."
           git config --global user.email "pipeline@azuredevops.com"
           git config --global user.name "Azure DevOps Pipeline"
 
           echo "Adding Azure Repo as a remote..."
-          # This URL is the same and should now work
           git remote add azure https://$(System.AccessToken)@dev.azure.com/ST10363312/Gift%20of%20the%20Givers%20Foundation/_git/GiftOfTheGiver_Foundation
 
           echo "Pushing code to Azure Repo..."
