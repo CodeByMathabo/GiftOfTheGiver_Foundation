@@ -1,0 +1,73 @@
+﻿@page "/donation"
+
+<PageTitle>Donation</PageTitle>
+
+<div class="report-card">
+    <div class="card-header">
+        <h3 class="card-header-title">Monetary Donations</h3>
+    </div>
+    <div class="card-body">
+        <p>Your financial support helps us respond swiftly to disasters and fund ongoing projects.</p>
+
+        <form>
+            <div class="mb-3">
+                <label for="amount" class="form-label">Amount (ZAR)</label>
+                <input type="number" id="amount" class="form-control" placeholder="e.g., 500.00" />
+            </div>
+            <button type="submit" class="btn btn-primary" style="background-color: #588157; border: none;">Donate Now</button>
+        </form>
+    </div>
+</div>
+
+<div class="report-card">
+    <div class="card-header">
+        <h3 class="card-header-title">Resource Donations</h3>
+    </div>
+    <div class="card-body">
+        <p>Pledge resources or items. Our team will coordinate with you for collection or drop-off.</p>
+
+        <form>
+            <div class="mb-3">
+                <label for="donorName" class="form-label">Donor Full Name</label>
+                <input type="text" id="donorName" class="form-control" placeholder="e.g., Peter Smith" />
+            </div>
+
+            <div class="mb-3">
+                <label for="donorContact" class="form-label">Donor Contact Number</label>
+                <input type="tel" id="donorContact" class="form-control" placeholder="e.g., 0821234567" />
+            </div>
+
+            <div class="mb-3">
+                <label for="donationType" class="form-label">Donate</label>
+                <select id="donationType" class="form-select">
+                    <option value="" selected disabled>Select item type...</option>
+                    <option value="Food">Food</option>
+                    <option value="Clothing">Clothing</option>
+                    <option value="Sanitation">Sanitation Products</option>
+                    <option value="Hygiene">Hygiene Products</option>
+                    <option value="Educational">Educational Material</option>
+                    <option value="Blankets">Blankets</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="quantity" class="form-label">Quantity</label>
+                <input type="number" id="quantity" class="form-control" placeholder="e.g., 10" />
+            </div>
+
+            <div class="mb-3">
+                <label for="deliveryOption" class="form-label">Delivery Option</label>
+                <select id="deliveryOption" class="form-select">
+                    <option value="" selected disabled>Select delivery option...</option>
+                    <option value="DropOff">I will drop-off the items</option>
+                    <option value="Ship">I will ship the items</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary" style="background-color: #588157; border: none;">Pledge Donation</button>
+        </form>
+    </div>
+</div>
+
+@code {
+    // All C# logic will be added here
+}
