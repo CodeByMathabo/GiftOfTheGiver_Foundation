@@ -1,0 +1,64 @@
+﻿@page "/team"
+@layout Components.Layout.MainLayout
+
+<PageTitle>Volunteer Team</PageTitle>
+
+<div class="report-card">
+    <div class="card-header">
+        <h3 class="card-header-title">Volunteer Team</h3>
+    </div>
+    <div class="card-body">
+        <p>This page lists all registered volunteers. This data will be populated from the database once it is configured.</p>
+
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Volunteer Full Name</th>
+                        <th>Volunteer Contact Number</th>
+                        <th>Availability</th>
+                        <th>Contribution</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Sandra Lukeman</td>
+                        <td>0821234567</td>
+                        <td>Weekdays - all day</td>
+                        <td>Feeding Scheme</td>
+                        <td>
+                            <button class="btn btn-success btn-sm me-2">Approve</button>
+                            <button class="btn btn-danger btn-sm">Remove</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Peter Smith</td>
+                        <td>0719876543</td>
+                        <td>Saturday - 08:00am to 12:00am</td>
+                        <td>Fundraising</td>
+                        <td>
+                            <button class="btn btn-success btn-sm me-2">Approve</button>
+                            <button class="btn btn-danger btn-sm">Remove</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Nonhlanhla Dube</td>
+                        <td>0831112233</td>
+                        <td>Weekdays - 13:00pm to 17:00</td>
+                        <td>Emergency Response</td>
+                        <td>
+                            <button class="btn btn-success btn-sm me-2">Approve</button>
+                            <button class="btn btn-danger btn-sm">Remove</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    // C# logic to fetch and display the list of volunteers will be added here.
+    // C# handlers for Approve(volunteerId) and Remove(volunteerId) will be added here.
+}

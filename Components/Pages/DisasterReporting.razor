@@ -1,0 +1,68 @@
+﻿@page "/disaster-reporting"
+@layout Components.Layout.MainLayout
+
+<PageTitle>Disaster Reporting</PageTitle>
+
+<div classs="report-card">
+    <div class="card-header">
+        <h3 class="card-header-title">Incident Details</h3>
+    </div>
+    <div class="card-body">
+        <form>
+            <div class="row g-3 align-items-center">
+                <div class="col-md-8">
+                    <label for="incidentType" class="form-label">Type of Incident</label>
+                    <select id="incidentType" class="form-select">
+                        <option value="">Select a type...</option>
+                        <option value="Flood">Flood</option>
+                        <option value="Wildfire">Wildfire</option>
+                        <option value="Earthquake">Earthquake</option>
+                        <option value="Drought">Drought</option>
+                        <option value="Medical Emergency">Medical Emergency</option>
+                        <option value="Search and Rescue">Search and Rescue</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Urgency Level</label>
+                    <div class="btn-group-toggle" role="group">
+                        <button type="button" class="btn btn-urgency">Low</button>
+                        <button type="button" class="btn btn-urgency-active">Medium</button>
+                        <button type="button" class="btn btn-urgency">High</button>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="incidentDate" class="form-label">Incident Date & Time <span class="required-field">(required)</span></label>
+                    <input type="datetime-local" id="incidentDate" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label for="address" class="form-label">Location</label>
+                    <input type="text" id="address" class="form-control" placeholder="e.g., 123 Madiba Street,Table Mountain" />
+                </div>
+
+                <div class="col-md-6">
+                    <label for="city" class="form-label">City/Suburb/Township</label>
+                    <input type="text" id="city" class="form-control" placeholder="e.g., Soweto, Zola Zone 7" />
+                </div>
+                <div class="col-md-6">
+                    <label for="province" class="form-label">Province</label>
+                    <input type="text" id="province" class="form-control" placeholder="e.g., Gauteng" />
+                </div>
+
+                <div class="col-12">
+                    <label for="description" class="form-label">Detailed Description</label>
+                    <textarea id="description" class="form-control" rows="5" placeholder="Describe the situation, potential number of people affected, and immediate needs."></textarea>
+                </div>
+            </div>
+
+            <div class.form-footer" style="margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary" style="background-color: #588157; border: none;">Submit Report</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@code {
+    // C# logic will be added here
+}

@@ -1,0 +1,71 @@
+﻿@page "/incidents"
+@layout Components.Layout.MainLayout
+
+<PageTitle>Manage Incidents</PageTitle>
+
+<div class="report-card">
+    <div class="card-header">
+        <h3 class="card-header-title">Manage Incoming Incidents</h3>
+    </div>
+    <div class="card-body">
+        <p>Review, acknowledge, and resolve all incoming disaster reports from this panel.</p>
+
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Incident ID</th>
+                        <th>Date Reported</th>
+                        <th>Type</th>
+                        <th>Urgency</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>INC-001</td>
+                        <td>2025-10-30 09:15</td>
+                        <td>Flood</td>
+                        <td><span class="badge bg-danger">High</span></td>
+                        <td>123 Madiba St, Pretoria, Gauteng</td>
+                        <td><span class="badge bg-warning text-dark">Pending</span></td>
+                        <td>
+                            <button class="btn btn-primary btn-sm me-2">View Details</button>
+                            <button class="btn btn-success btn-sm">Resolve</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>INC-002</td>
+                        <td>2025-10-29 14:30</td>
+                        <td>Wildfire</td>
+                        <td><span class="badge bg-warning text-dark">Medium</span></td>
+                        <td>Stellenbosch, WC</td>
+                        <td><span class="badge bg-info">Acknowledged</span></td>
+                        <td>
+                            <button class="btn btn-primary btn-sm me-2">View Details</button>
+                            <button class="btn btn-success btn-sm">Resolve</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>INC-003</td>
+                        <td>2025-10-29 11:00</td>
+                        <td>Search and Rescue</td>
+                        <td><span class="badge bg-danger">High</span></td>
+                        <td>Durban, KZN</td>
+                        <td><span class="badge bg-success">Resolved</span></td>
+                        <td>
+                            <button class="btn btn-primary btn-sm me-2">Acknowledge</button>
+                            <button class="btn btn-secondary btn-sm" disabled>Resolved</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    // C# logic to fetch and manage incidents will be added here.
+}

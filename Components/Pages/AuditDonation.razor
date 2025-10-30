@@ -1,0 +1,111 @@
+﻿@page "/audit-donations"
+@layout Components.Layout.MainLayout
+
+<PageTitle>Audit Donations</PageTitle>
+
+<div class="report-card">
+    <div class="card-header">
+        <h3 class="card-header-title">Monetary Donations Audit</h3>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <button class="btn btn-info btn-sm">Download Monetary CSV Report</button>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Donation ID</th>
+                        <th>Donor Full Name</th>
+                        <th>Amount (ZAR)</th>
+                        <th>Pledge Date</th>
+                        <th>Audit Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>MON-001</td>
+                        <td>James Freeman</td>
+                        <td>R 500.00</td>
+                        <td>2024-10-28</td>
+                        <td><em>(Pending)</em></td>
+                        <td>
+                            <button class="btn btn-success btn-sm">Approve</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>MON-002</td>
+                        <td>Emiley Stones</td>
+                        <td>R 1200.00</td>
+                        <td>2024-10-27</td>
+                        <td>2024-10-28</td>
+                        <td>
+                            <button class="btn btn-secondary btn-sm" disabled>Approved</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="report-card">
+    <div class="card-header">
+        <h3 class="card-header-title">Resource Donations Audit</h3>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <button class="btn btn-info btn-sm">Download Resource CSV Report</button>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Pledge ID</th>
+                        <th>Donor Full Name</th>
+                        <th>Contact Number</th>
+                        <th>Item</th>
+                        <th>Quantity</th>
+                        <th>Delivery</th>
+                        <th>Pledge Date</th>
+                        <th>Audit Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>RES-001</td>
+                        <td>Peter Smith</td>
+                        <td>0821234567</td>
+                        <td>Blankets</td>
+                        <td>50</td>
+                        <td>Drop-Off</td>
+                        <td>2024-10-29</td>
+                        <td><em>(Pending)</em></td>
+                        <td>
+                            <button class="btn btn-success btn-sm">Approve</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>RES-002</td>
+                        <td>Sandra Lukeman</td>
+                        <td>0719876543</td>
+                        <td>Food</td>
+                        <td>100</td>
+                        <td>Ship</td>
+                        <td>2024-10-28</td>
+                        <td>2024-10-29</td>
+                        <td>
+                            <button class="btn btn-secondary btn-sm" disabled>Approved</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    // C# logic to fetch donations and handle approve/download actions will be added here.
+}

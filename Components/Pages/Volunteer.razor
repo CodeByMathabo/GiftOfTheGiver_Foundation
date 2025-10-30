@@ -1,0 +1,56 @@
+﻿@page "/volunteer"
+@rendermode InteractiveServer
+
+<PageTitle>Volunteer</PageTitle>
+
+<div class="report-card">
+    <div class="card-header">
+        <h3 class="card-header-title">Become a Volunteer</h3>
+    </div>
+    <div class="card-body">
+        <p>Join our team by filling out your details below. Your time and skills can make a real difference.</p>
+
+        <form>
+            <div class="mb-3">
+                <label for="volunteerName" class="form-label">Volunteer Full Name</label>
+                <input type="text" id="volunteerName" class="form-control" placeholder="e.g., Sandra Lukeman" />
+            </div>
+
+            <div class="mb-3">
+                <label for="helpType" class="form-label">How would you like to help?</label>
+                <select id="helpType" class="form-select">
+                    <option value="" selected disabled>Select an area...</option>
+                    <option value="Feeding Scheme">Feeding Scheme</option>
+                    <option value="Wildfire Conservation">Wildfire Conservation</option>
+                    <option value="Fundraising">Fundraising</option>
+                    <option value="Emergency Response">Emergency Response</option>
+                    <option value="Charitable Work">Charitable Work</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="volunteerContact" class="form-label">Volunteer Contact Number</label>
+                <input type="tel" id="volunteerContact" class="form-control" placeholder="e.g., 0821234567" />
+            </div>
+
+            <div class="mb-3">
+                <label for="availability" class="form-label">Availability</label>
+                <select id="availability" class="form-select">
+                    <option value="" selected disabled>Select your availability...</option>
+                    <option value="Weekdays-All">Weekdays - all day</option>
+                    <option value="Weekdays-AM">Weekdays - 08:00am to 12:00am</option>
+                    <option value="Weekdays-PM">Weekdays - 13:00pm to 17:00</option>
+                    <option value="Saturday-All">Saturday - all day</option>
+                    <option value="Saturday-AM">Saturday - 08:00am to 12:00am</option>
+                    <option value="Saturday-PM">Saturday - 13:00pm to 17:00</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="background-color: #588157; border: none;">Sign Up</button>
+        </form>
+    </div>
+</div>
+
+@code {
+    // All C# logic will be added here
+}
