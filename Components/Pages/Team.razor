@@ -1,5 +1,12 @@
 ﻿@page "/team"
 @layout Components.Layout.MainLayout
+@rendermode InteractiveServer
+
+@using GiftOfTheGiver_Foundation.Data
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject ILogger<Team> Logger
+@using VolunteerModel = GiftOfTheGiver_Foundation.Models.Volunteer
 
 <PageTitle>Volunteer Team</PageTitle>
 
@@ -8,7 +15,16 @@
         <h3 class="card-header-title">Volunteer Team</h3>
     </div>
     <div class="card-body">
-        <p>This page lists all registered volunteers. This data will be populated from the database once it is configured.</p>
+
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+            <div class="alert alert-danger" role="alert">
+                <h5 class="alert-heading">Action Required!</h5>
+                <p>@successMessage</p>
+            </div>
+        }
+
+        <p>This page lists all registered volunteers. Use the actions to manage your team.</p>
 
         <div class="table-responsive">
             <table class="table table-striped">
@@ -22,36 +38,35 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>Sandra Lukeman</td>
-                        <td>0821234567</td>
-                        <td>Weekdays - all day</td>
-                        <td>Feeding Scheme</td>
-                        <td>
-                            <button class="btn btn-success btn-sm me-2">Approve</button>
-                            <button class="btn btn-danger btn-sm">Remove</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Peter Smith</td>
-                        <td>0719876543</td>
-                        <td>Saturday - 08:00am to 12:00am</td>
-                        <td>Fundraising</td>
-                        <td>
-                            <button class="btn btn-success btn-sm me-2">Approve</button>
-                            <button class="btn btn-danger btn-sm">Remove</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Nonhlanhla Dube</td>
-                        <td>0831112233</td>
-                        <td>Weekdays - 13:00pm to 17:00</td>
-                        <td>Emergency Response</td>
-                        <td>
-                            <button class="btn btn-success btn-sm me-2">Approve</button>
-                            <button class="btn btn-danger btn-sm">Remove</button>
-                        </td>
-                    </tr>
+                    @if (volunteers.Any())
+                    {
+                        @foreach (var volunteer in volunteers)
+                        {
+                            <tr>
+                                <td>@volunteer.VolunteerName</td>
+                                <td>@volunteer.VolunteerContact</td>
+                                <td>@GetFullAvailabilityText(volunteer.Availability)</td>
+                                <td>@volunteer.HelpType</td>
+                                <td>
+                                    @if (volunteer.ApprovedDate.HasValue)
+                                    {
+                                        <button class="btn btn-secondary btn-sm me-2" disabled>Approved</button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-success btn-sm me-2" @onclick="() => ApproveVolunteer(volunteer.VolunteerId)">Approve</button>
+                                    }
+                                    <button class="btn btn-danger btn-sm" @onclick="() => RemoveVolunteer(volunteer.VolunteerId)">Remove</button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center">No volunteers have signed up yet.</td>
+                        </tr>
+                    }
                 </tbody>
             </table>
         </div>
@@ -59,6 +74,103 @@
 </div>
 
 @code {
-    // C# logic to fetch and display the list of volunteers will be added here.
-    // C# handlers for Approve(volunteerId) and Remove(volunteerId) will be added here.
+    private List<VolunteerModel> volunteers = new();
+    private string? successMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadVolunteers();
+    }
+
+    private async Task LoadVolunteers()
+    {
+        // Clear any old messages
+        successMessage = null;
+
+        try
+        {
+            await using var dbContext = await DbFactory.CreateDbContextAsync();
+            volunteers = await dbContext.Volunteers
+                            .OrderByDescending(v => v.VolunteerId) // Show newest first
+                            .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading volunteers.");
+        }
+    }
+
+    private async Task ApproveVolunteer(int volunteerId)
+    {
+        try
+        {
+            await using var dbContext = await DbFactory.CreateDbContextAsync();
+            var volunteer = await dbContext.Volunteers.FindAsync(volunteerId);
+
+            if (volunteer != null && !volunteer.ApprovedDate.HasValue)
+            {
+                volunteer.ApprovedDate = DateTime.UtcNow;
+                await dbContext.SaveChangesAsync();
+
+                // Set the success snackbar message
+                successMessage = $"Successfully approved {volunteer.VolunteerName}. REMINDER: Please contact them at {volunteer.VolunteerContact} to inform them and assign an event.";
+
+                // Update the item in the local list to refresh the UI
+                var itemInList = volunteers.FirstOrDefault(v => v.VolunteerId == volunteerId);
+                if (itemInList != null)
+                {
+                    itemInList.ApprovedDate = volunteer.ApprovedDate;
+                    StateHasChanged();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error approving volunteer {VolunteerId}.", volunteerId);
+        }
+    }
+
+    private async Task RemoveVolunteer(int volunteerId)
+    {
+        try
+        {
+            await using var dbContext = await DbFactory.CreateDbContextAsync();
+            var volunteer = await dbContext.Volunteers.FindAsync(volunteerId);
+
+            if (volunteer != null)
+            {
+                dbContext.Volunteers.Remove(volunteer);
+                await dbContext.SaveChangesAsync();
+
+                // Remove from the local list and refresh the UI
+                volunteers.RemoveAll(v => v.VolunteerId == volunteerId);
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error removing volunteer {VolunteerId}.", volunteerId);
+        }
+    }
+
+    private string GetFullAvailabilityText(string availabilityValue)
+    {
+        switch (availabilityValue)
+        {
+            case "Weekdays-All":
+                return "Weekdays - all day";
+            case "Weekdays-AM":
+                return "Weekdays - 08:00am to 12:00am";
+            case "Weekdays-PM":
+                return "Weekdays - 13:00pm to 17:00";
+            case "Saturday-All":
+                return "Saturday - all day";
+            case "Saturday-AM":
+                return "Saturday - 08:00am to 12:00am";
+            case "Saturday-PM":
+                return "Saturday - 13:00pm to 17:00";
+            default:
+                return availabilityValue; // As a fallback
+        }
+    }
 }
