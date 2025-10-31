@@ -1,4 +1,9 @@
 ﻿@page "/donation"
+@using GiftOfTheGiver_Foundation.Data
+@using GiftOfTheGiver_Foundation.Models 
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@rendermode InteractiveServer
 
 <PageTitle>Donation</PageTitle>
 
@@ -9,27 +14,40 @@
     <div class="card-body">
         <p>Your financial support helps us respond swiftly to disasters and fund ongoing projects.</p>
 
-        <form>
-            <div class="alert" role="alert" style="background-color: #FEFAE0; border-color: #3A5A40; color: #3A5A40;">
-                <h5 style="font-weight: bold; color: #2D6A4F;">Banking Details for EFT</h5>
-                <strong>Gift of the Givers Foundation</strong><br>
-                <strong>BANK:</strong> Standard Bank<br>
-                <strong>ACCOUNT NUMBER:</strong> 052137228<br>
-                <strong>UNIVERSAL CODE:</strong> 051001<br>
-                <strong>SWIFT CODE:</strong> SBZAZAJJ
-            </div>
+        <div class="alert" role="alert" style="background-color: #FEFAE0; border-color: #3A5A40; color: #3A5A40;">
+            <h5 style="font-weight: bold; color: #2D6A4F;">Banking Details for EFT</h5>
+            <strong>Gift of the Givers Foundation</strong><br>
+            <strong>BANK:</strong> Standard Bank<br>
+            <strong>ACCOUNT NUMBER:</strong> 052137228<br>
+            <strong>UNIVERSAL CODE:</strong> 051001<br>
+            <strong>SWIFT CODE:</strong> SBZAZAJJ
+        </div>
+
+        <EditForm Model="@newMonetaryDonation" OnValidSubmit="HandleMonetarySubmit" FormName="MonetaryForm">
+            <DataAnnotationsValidator />
+
+            @if (!string.IsNullOrEmpty(monetaryMessage))
+            {
+                <div class="alert alert-success mt-3" role="alert">
+                    @monetaryMessage
+                </div>
+            }
 
             <div class="mb-3">
                 <label for="monetaryDonorName" class="form-label">Donor Full Name</label>
-                <input type="text" id="monetaryDonorName" class="form-control" placeholder="e.g., Peter Smith" />
+                <InputText id="monetaryDonorName" class="form-control" @bind-Value="newMonetaryDonation.DonorFullName" placeholder="e.g., Peter Smith" />
+                <ValidationMessage For="@(() => newMonetaryDonation.DonorFullName)" />
             </div>
 
             <div class="mb-3">
                 <label for="amount" class="form-label">Amount (ZAR)</label>
-                <input type="number" id="amount" class="form-control" placeholder="e.g., 500.00" />
+                <InputNumber id="amount" class="form-control" @bind-Value="newMonetaryDonation.Amount" placeholder="e.g., 500.00" />
+                <ValidationMessage For="@(() => newMonetaryDonation.Amount)" />
             </div>
+
             <button type="submit" class="btn btn-primary" style="background-color: #588157; border: none;">Donate Now</button>
-        </form>
+        
+        </EditForm>
     </div>
 </div>
 
@@ -40,20 +58,31 @@
     <div class="card-body">
         <p>Pledge resources or items. Our team will coordinate with you for collection or drop-off.</p>
 
-        <form>
+        <EditForm Model="@newResourceDonation" OnValidSubmit="HandleResourceSubmit" FormName="ResourceForm">
+            <DataAnnotationsValidator />
+
+            @if (!string.IsNullOrEmpty(resourceMessage))
+            {
+                <div class="alert alert-success mt-3" role="alert">
+                    @resourceMessage
+                </div>
+            }
+
             <div class="mb-3">
                 <label for="resourceDonorName" class="form-label">Donor Full Name</label>
-                <input type="text" id="resourceDonorName" class="form-control" placeholder="e.g., Peter Smith" />
+                <InputText id="resourceDonorName" class="form-control" @bind-Value="newResourceDonation.DonorFullName" placeholder="e.g., Peter Smith" />
+                <ValidationMessage For="@(() => newResourceDonation.DonorFullName)" />
             </div>
 
             <div class="mb-3">
                 <label for="donorContact" class="form-label">Donor Contact Number</label>
-                <input type="tel" id="donorContact" class="form-control" placeholder="e.g., 0821234567" />
+                <InputText id="donorContact" class="form-control" @bind-Value="newResourceDonation.ContactNumber" placeholder="e.g., 0821234567" />
+                <ValidationMessage For="@(() => newResourceDonation.ContactNumber)" />
             </div>
 
             <div class="mb-3">
                 <label for="donationType" class="form-label">Donate</label>
-                <select id="donationType" class="form-select">
+                <InputSelect id="donationType" class="form-select" @bind-Value="newResourceDonation.ItemType">
                     <option value="" selected disabled>Select item type...</option>
                     <option value="Food">Food</option>
                     <option value="Clothing">Clothing</option>
@@ -61,27 +90,91 @@
                     <option value="Hygiene">Hygiene Products</option>
                     <option value="Educational">Educational Material</option>
                     <option value="Blankets">Blankets</option>
-                </select>
+                </InputSelect>
+                <ValidationMessage For="@(() => newResourceDonation.ItemType)" />
             </div>
 
             <div class="mb-3">
                 <label for="quantity" class="form-label">Quantity</label>
-                <input type="number" id="quantity" class="form-control" placeholder="e.g., 10" />
+                <InputNumber id="quantity" class="form-control" @bind-Value="newResourceDonation.Quantity" placeholder="e.g., 10" />
+                <ValidationMessage For="@(() => newResourceDonation.Quantity)" />
             </div>
 
             <div class="mb-3">
                 <label for="deliveryOption" class="form-label">Delivery Option</label>
-                <select id="deliveryOption" class="form-select">
+                <InputSelect id="deliveryOption" class="form-select" @bind-Value="newResourceDonation.DeliveryOption">
                     <option value="" selected disabled>Select delivery option...</option>
                     <option value="DropOff">I will drop-off the items</option>
                     <option value="Ship">I will ship the items</option>
-                </select>
+                </InputSelect>
+                <ValidationMessage For="@(() => newResourceDonation.DeliveryOption)" />
             </div>
             <button type="submit" class="btn btn-primary" style="background-color: #588157; border: none;">Pledge Donation</button>
-        </form>
+        
+        </EditForm>
     </div>
 </div>
 
 @code {
-    // All C# logic will be added here
+    // Create instances of our models to bind to the forms
+    private MonetaryDonation newMonetaryDonation = new();
+    private ResourceDonation newResourceDonation = new();
+
+    // Strings to hold success messages
+    private string monetaryMessage = string.Empty;
+    private string resourceMessage = string.Empty;
+
+    /// <summary>
+    /// This method is called when the Monetary Donation form is valid and submitted.
+    /// </summary>
+    private async Task HandleMonetarySubmit()
+    {
+        // Get a DbContext instance from the factory
+        await using var dbContext = await DbFactory.CreateDbContextAsync();
+
+        // Add the new donation object to the tracking set
+        dbContext.MonetaryDonation.Add(newMonetaryDonation);
+
+        try
+        {
+            // Save the changes to the database
+            await dbContext.SaveChangesAsync();
+
+            // Set a success message and reset the form
+            monetaryMessage = "Thank you for your generous donation!";
+            newMonetaryDonation = new(); // Clear the form
+        }
+        catch (Exception ex)
+        {
+            // TODO: Log the error
+            monetaryMessage = "An error occurred. Please try again.";
+        }
+    }
+
+    /// <summary>
+    /// This method is called when the Resource Donation form is valid and submitted.
+    /// </summary>
+    private async Task HandleResourceSubmit()
+    {
+        // Get a DbContext instance from the factory
+        await using var dbContext = await DbFactory.CreateDbContextAsync();
+
+        // Add the new donation object to the tracking set
+        dbContext.ResourceDonation.Add(newResourceDonation);
+
+        try
+        {
+            // Save the changes to the database
+            await dbContext.SaveChangesAsync();
+
+            // Set a success message and reset the form
+            resourceMessage = "Thank you! Our team will be in touch soon to coordinate.";
+            newResourceDonation = new(); // Clear the form
+        }
+        catch (Exception ex)
+        {
+            // TODO: Log the error
+            resourceMessage = "An error occurred. Please try again.";
+        }
+    }
 }
