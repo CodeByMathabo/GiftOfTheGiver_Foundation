@@ -6,6 +6,7 @@
 @using GiftOfTheGiver_Foundation.Models
 @using Microsoft.EntityFrameworkCore
 @using System.Globalization
+@inject NavigationManager NavManager
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 
 <PageTitle>Audit Donations</PageTitle>
@@ -16,7 +17,7 @@
     </div>
     <div class="card-body">
         <div class="mb-3">
-            <button class="btn btn-info btn-sm" @onclick="DownloadMonetaryCsv" disabled>Download Monetary CSV Report</button>
+            <button class="btn btn-info btn-sm" @onclick="DownloadMonetaryCsv">Download Monetary CSV Report</button>
         </div>
         <div class="table-responsive">
             <table class="table table-striped">
@@ -81,7 +82,7 @@
     </div>
     <div class="card-body">
         <div class="mb-3">
-            <button class="btn btn-info btn-sm" @onclick="DownloadResourceCsv" disabled>Download Resource CSV Report</button>
+            <button class="btn btn-info btn-sm" @onclick="DownloadResourceCsv">Download Resource CSV Report</button>
         </div>
         <div class="table-responsive">
             <table class="table table-striped">
@@ -231,14 +232,15 @@
     }
 
     private void DownloadMonetaryCsv()
-    {
-        // CSV Download logic has not been implemented yet.
-        Console.WriteLine("DownloadMonetaryCsv clicked, but is not implemented.");
-    }
+{
+    // This navigates the browser to the new endpoint, which triggers the download.
+    // 'forceLoad: true' is essential for this to work from a Blazor Server app.
+    NavManager.NavigateTo("/download/monetary-csv", forceLoad: true);
+}
 
-    private void DownloadResourceCsv()
-    {
-        // CSV Download logic has not been implemented yet.
-        Console.WriteLine("DownloadResourceCsv clicked, but is not implemented.");
-    }
+private void DownloadResourceCsv()
+{
+    // This navigates the browser to the new endpoint, which triggers the download.
+    NavManager.NavigateTo("/download/resource-csv", forceLoad: true);
+}
 }
