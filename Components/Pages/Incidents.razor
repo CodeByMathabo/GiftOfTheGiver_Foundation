@@ -9,10 +9,10 @@
 @using VolunteerModel = GiftOfTheGiver_Foundation.Models.Volunteer
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 
-
 <PageTitle>Manage Incidents</PageTitle>
 
 <div class="report-card">
+    @* ... (The card-header and card-body <p> are unchanged) ... *@
     <div class="card-header">
         <h3 class="card-header-title">Manage Incoming Incidents</h3>
     </div>
@@ -21,6 +21,7 @@
 
         <div class="table-responsive">
             <table class="table table-striped">
+                @* ... (The <thead> is unchanged) ... *@
                 <thead>
                     <tr>
                         <th>Incident ID</th>
@@ -39,6 +40,7 @@
                         {
                             var status = GetStatus(incident);
                             <tr>
+                                @* ... (The <td> elements for ID, Date, Type, Urgency, Location, Status are unchanged) ... *@
                                 <td>INC-@incident.DisasterReportId.ToString("D3")</td>
                                 <td>@incident.IncidentDate.ToString("yyyy-MM-dd HH:mm")</td>
                                 <td>@incident.IncidentType</td>
@@ -53,6 +55,7 @@
                                         @status
                                     </span>
                                 </td>
+
                                 <td>
                                     <button class="btn btn-primary btn-sm me-2"
                                             @onclick="() => AcknowledgeIncident(incident.DisasterReportId)"
@@ -61,7 +64,7 @@
                                     </button>
 
                                     <button class="btn @(status == "Resolved" ? "btn-secondary" : "btn-success") btn-sm"
-                                            @onclick="() => ResolveIncident(incident.DisasterReportId)"
+                                            @onclick="() => OpenDebriefModal(incident.DisasterReportId)"
                                             disabled="@(!incident.AcknowledgedDate.HasValue || incident.ResolvedDate.HasValue)">
                                         @(status == "Resolved" ? "Resolved" : "Resolve")
                                     </button>
@@ -71,6 +74,7 @@
                     }
                     else
                     {
+                        @* ... (The "No incidents" <tr> is unchanged) ... *@
                         <tr>
                             <td colspan="7" class="text-center">No incidents have been reported yet.</td>
                         </tr>
@@ -80,16 +84,27 @@
         </div>
     </div>
 </div>
+
 @if (isAssignModalVisible)
 {
     <AssignVolunteersModal IncidentId="selectedIncidentId" OnClose="HandleModalClose" />
 }
 
+@if (isDebriefModalVisible)
+{
+    <DebriefIncidentModal IncidentId="selectedIncidentId" OnClose="HandleDebriefModalClose" />
+}
+
+
 @code {
     private List<DisasterReport> incidents = new();
-    // --- NEW STATE VARIABLES FOR MODAL ---
+
+    // --- State variables for Assign Modal ---
     private bool isAssignModalVisible = false;
     private int selectedIncidentId = 0;
+
+    // --- NEW STATE VARIABLES FOR DEBRIEF MODAL ---
+    private bool isDebriefModalVisible = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -98,21 +113,22 @@
 
     private async Task LoadIncidents()
     {
-        isAssignModalVisible = false; // Ensure modal is closed on load
+        isAssignModalVisible = false;
+        isDebriefModalVisible = false; // Ensure this is also closed on load
         try
         {
             await using var dbContext = await DbFactory.CreateDbContextAsync();
             incidents = await dbContext.DisasterReports
-                                .OrderByDescending(dr => dr.IncidentDate) // Show newest first
+                                .OrderByDescending(dr => dr.IncidentDate)
                                 .ToListAsync();
         }
         catch (Exception ex)
         {
-            // Use Console.WriteLine to avoid ambiguity with ILogger
             Console.WriteLine($"Error loading incidents: {ex.Message}");
         }
     }
 
+    // ... (GetStatus, GetStatusBadgeClass, GetUrgencyBadgeClass, FormatLocation are unchanged) ...
     private string GetStatus(DisasterReport report)
     {
         if (report.ResolvedDate.HasValue) return "Resolved";
@@ -122,7 +138,6 @@
 
     private string GetStatusBadgeClass(string status)
     {
-        // Matches the badge classes from your file
         return status switch
         {
             "Resolved" => "bg-success",
@@ -134,7 +149,6 @@
 
     private string GetUrgencyBadgeClass(string urgency)
     {
-        // Matches the badge classes from your file
         return urgency switch
         {
             "High" => "bg-danger",
@@ -146,7 +160,6 @@
 
     private string FormatLocation(DisasterReport report)
     {
-        // Combines address parts into one string, like in your file
         var parts = new List<string>();
         if (!string.IsNullOrWhiteSpace(report.Address)) parts.Add(report.Address);
         if (!string.IsNullOrWhiteSpace(report.City)) parts.Add(report.City);
@@ -154,46 +167,36 @@
         return string.Join(", ", parts);
     }
 
-    // --- UPDATED AcknowledgeIncident ---
+    // --- AcknowledgeIncident and HandleModalClose are unchanged ---
     private void AcknowledgeIncident(int incidentId)
     {
-        // This method no longer saves.
-        // It just opens the modal.
         selectedIncidentId = incidentId;
         isAssignModalVisible = true;
     }
 
-    // --- NEW METHOD ---
     private async Task HandleModalClose()
     {
         isAssignModalVisible = false;
+        await LoadIncidents();
+        StateHasChanged();
+    }
+
+    // --- 'ResolveIncident' is RENAMED and UPDATED ---
+    private void OpenDebriefModal(int incidentId)
+    {
+        // This method no longer saves. It just opens the debrief modal.
+        selectedIncidentId = incidentId;
+        isDebriefModalVisible = true;
+    }
+
+    // --- NEW METHOD to handle the debrief modal closing ---
+    private async Task HandleDebriefModalClose()
+    {
+        isDebriefModalVisible = false;
         await LoadIncidents(); // Refresh the main list
         StateHasChanged(); // Tell Blazor to re-render
     }
 
-    private async Task ResolveIncident(int incidentId)
-    {
-        try
-        {
-            await using var dbContext = await DbFactory.CreateDbContextAsync();
-            var incident = await dbContext.DisasterReports.FindAsync(incidentId);
-
-            if (incident != null && !incident.ResolvedDate.HasValue)
-            {
-                incident.ResolvedDate = DateTime.UtcNow;
-
-                if (!incident.AcknowledgedDate.HasValue)
-                {
-                    incident.AcknowledgedDate = incident.ResolvedDate;
-                }
-
-                await dbContext.SaveChangesAsync();
-                await LoadIncidents(); // Refresh the list
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error resolving incident {incidentId}: {ex.Message}");
-        }
-    }
+    // The old ResolveIncident(int incidentId) method is no longer needed
+    // as that logic now lives inside DebriefIncidentModal.razor
 }
