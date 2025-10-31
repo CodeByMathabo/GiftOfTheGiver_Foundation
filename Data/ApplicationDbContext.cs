@@ -10,5 +10,6 @@ namespace GiftOfTheGiver_Foundation.Data
         public DbSet<MonetaryDonation> MonetaryDonation { get; set; }
         public DbSet<ResourceDonation> ResourceDonation { get; set; }
         public DbSet<Volunteer> Volunteers { get; set; }
+        public DbSet<DisasterReport> DisasterReports { get; set; }
     }
 }
