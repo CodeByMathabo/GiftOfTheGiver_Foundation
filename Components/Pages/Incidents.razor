@@ -5,7 +5,10 @@
 @using GiftOfTheGiver_Foundation.Data
 @using GiftOfTheGiver_Foundation.Models
 @using Microsoft.EntityFrameworkCore
+@using GiftOfTheGiver_Foundation.Components.Account.Shared
+@using VolunteerModel = GiftOfTheGiver_Foundation.Models.Volunteer
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
+
 
 <PageTitle>Manage Incidents</PageTitle>
 
@@ -77,9 +80,16 @@
         </div>
     </div>
 </div>
+@if (isAssignModalVisible)
+{
+    <AssignVolunteersModal IncidentId="selectedIncidentId" OnClose="HandleModalClose" />
+}
 
 @code {
     private List<DisasterReport> incidents = new();
+    // --- NEW STATE VARIABLES FOR MODAL ---
+    private bool isAssignModalVisible = false;
+    private int selectedIncidentId = 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -88,6 +98,7 @@
 
     private async Task LoadIncidents()
     {
+        isAssignModalVisible = false; // Ensure modal is closed on load
         try
         {
             await using var dbContext = await DbFactory.CreateDbContextAsync();
@@ -123,19 +134,19 @@
 
     private string GetUrgencyBadgeClass(string urgency)
     {
-        // Matches the badge classes from your file [cite: 67, 70, 73]
+        // Matches the badge classes from your file
         return urgency switch
         {
             "High" => "bg-danger",
             "Medium" => "bg-warning text-dark",
-            "Low" => "bg-success", // Added "Low" for completeness
+            "Low" => "bg-success",
             _ => "bg-secondary"
         };
     }
 
     private string FormatLocation(DisasterReport report)
     {
-        // Combines address parts into one string, like in your file [cite: 67, 71]
+        // Combines address parts into one string, like in your file
         var parts = new List<string>();
         if (!string.IsNullOrWhiteSpace(report.Address)) parts.Add(report.Address);
         if (!string.IsNullOrWhiteSpace(report.City)) parts.Add(report.City);
@@ -143,24 +154,21 @@
         return string.Join(", ", parts);
     }
 
-    private async Task AcknowledgeIncident(int incidentId)
+    // --- UPDATED AcknowledgeIncident ---
+    private void AcknowledgeIncident(int incidentId)
     {
-        try
-        {
-            await using var dbContext = await DbFactory.CreateDbContextAsync();
-            var incident = await dbContext.DisasterReports.FindAsync(incidentId);
+        // This method no longer saves.
+        // It just opens the modal.
+        selectedIncidentId = incidentId;
+        isAssignModalVisible = true;
+    }
 
-            if (incident != null && !incident.AcknowledgedDate.HasValue)
-            {
-                incident.AcknowledgedDate = DateTime.UtcNow;
-                await dbContext.SaveChangesAsync();
-                await LoadIncidents(); // Refresh the list
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error acknowledging incident {incidentId}: {ex.Message}");
-        }
+    // --- NEW METHOD ---
+    private async Task HandleModalClose()
+    {
+        isAssignModalVisible = false;
+        await LoadIncidents(); // Refresh the main list
+        StateHasChanged(); // Tell Blazor to re-render
     }
 
     private async Task ResolveIncident(int incidentId)
@@ -174,7 +182,6 @@
             {
                 incident.ResolvedDate = DateTime.UtcNow;
 
-                // If it wasn't acknowledged, resolving it also acknowledges it
                 if (!incident.AcknowledgedDate.HasValue)
                 {
                     incident.AcknowledgedDate = incident.ResolvedDate;

@@ -1,0 +1,172 @@
+﻿@using GiftOfTheGiver_Foundation.Data
+@using GiftOfTheGiver_Foundation.Models
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@using VolunteerModel = GiftOfTheGiver_Foundation.Models.Volunteer
+
+@if (incident != null)
+{
+    <div class="modal-backdrop fade show"></div>
+
+    <div class="modal fade show" tabindex="-1" style="display: block;">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Acknowledge & Assign Team</h5>
+                    <button type="button" class="btn-close" @onclick="Cancel"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p>Assign approved volunteers to **INC-@incident.DisasterReportId.ToString("D3")**: @incident.IncidentType</p>
+
+                    @if (approvedVolunteers.Any())
+                    {
+                        <div class="list-group">
+                            @foreach (var volunteer in approvedVolunteers)
+                            {
+                                <label class="list-group-item">
+                                    <input class="form-check-input me-1"
+                                           type="checkbox"
+                                           @onchange="(e) => ToggleVolunteer(volunteer.VolunteerId, (bool)e.Value)"
+                                           checked="@selectedVolunteers.ContainsKey(volunteer.VolunteerId)">
+                                    <strong>@volunteer.VolunteerName</strong>
+                                    <small class="text-muted"> (@volunteer.HelpType / @volunteer.VolunteerContact)</small>
+                                </label>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            No approved volunteers are available. Please approve volunteers in the 'Team' page first.
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger mt-3">@errorMessage</div>
+                    }
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="HandleAssignment" disabled="@(!approvedVolunteers.Any())">
+                        Acknowledge & Assign
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int IncidentId { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; } // This is how we tell the parent page to close
+
+    private DisasterReport? incident;
+    private List<VolunteerModel> approvedVolunteers = new();
+    private Dictionary<int, bool> selectedVolunteers = new();
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // This runs when the modal is opened
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            await using var dbContext = await DbFactory.CreateDbContextAsync();
+
+            // 1. Get the incident
+            incident = await dbContext.DisasterReports.FindAsync(IncidentId);
+
+            // 2. Get all *approved* volunteers who are *not* already assigned to this incident
+            approvedVolunteers = await dbContext.Set<VolunteerModel>()
+                .Where(v => v.ApprovedDate.HasValue &&
+                            !dbContext.IncidentAssignments.Any(a => a.VolunteerId == v.VolunteerId && a.DisasterReportId == IncidentId))
+                .ToListAsync();
+
+            selectedVolunteers.Clear();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading data: {ex.Message}";
+        }
+    }
+
+    private void ToggleVolunteer(int volunteerId, bool isChecked)
+    {
+        if (isChecked)
+        {
+            if (!selectedVolunteers.ContainsKey(volunteerId))
+            {
+                selectedVolunteers.Add(volunteerId, true);
+            }
+        }
+        else
+        {
+            selectedVolunteers.Remove(volunteerId);
+        }
+    }
+
+    private async Task HandleAssignment()
+    {
+        if (!selectedVolunteers.Any())
+        {
+            errorMessage = "Please select at least one volunteer to assign.";
+            return;
+        }
+
+        try
+        {
+            await using var dbContext = await DbFactory.CreateDbContextAsync();
+
+            // 1. Find the incident again
+            var incidentToUpdate = await dbContext.DisasterReports.FindAsync(IncidentId);
+            if (incidentToUpdate == null)
+            {
+                errorMessage = "Incident not found.";
+                return;
+            }
+
+            // 2. Set its status
+            incidentToUpdate.AcknowledgedDate = DateTime.UtcNow;
+
+            // 3. Create the new assignment records
+            foreach (var volunteerId in selectedVolunteers.Keys)
+            {
+                var newAssignment = new IncidentAssignment
+                {
+                    DisasterReportId = IncidentId,
+                    VolunteerId = volunteerId,
+                    AssignedDate = DateTime.UtcNow,
+                    AttendedDate = null // Not attended yet
+                };
+                dbContext.IncidentAssignments.Add(newAssignment);
+            }
+
+            // 4. Save everything
+            await dbContext.SaveChangesAsync();
+
+            // 5. Close the modal
+            await OnClose.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error saving assignments: {ex.Message}";
+        }
+    }
+
+    private async Task Cancel()
+    {
+        await OnClose.InvokeAsync();
+    }
+}

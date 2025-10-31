@@ -1,9 +1,8 @@
 ﻿@page "/volunteer"
 @rendermode InteractiveServer
 
-@inject ILogger<Volunteer> Logger
 @using GiftOfTheGiver_Foundation.Data
-@using GiftOfTheGiver_Foundation.Models 
+@using GiftOfTheGiver_Foundation.Models
 @using VolunteerModel = GiftOfTheGiver_Foundation.Models.Volunteer
 @using Microsoft.EntityFrameworkCore
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
@@ -15,7 +14,7 @@
         <h3 class="card-header-title">Become a Volunteer</h3>
     </div>
     <div class="card-body">
-        <p>Join our team by filling out your details below. Your time and skills can make a real difference.</p> 
+        <p>Join our team by filling out your details below. Your time and skills can make a real difference.</p>
 
         <EditForm Model="@volunteer" OnValidSubmit="@HandleSubmit" FormName="VolunteerForm">
             <DataAnnotationsValidator />
@@ -38,11 +37,11 @@
                 <InputSelect id="helpType" class="form-select" @bind-Value="volunteer.HelpType">
                     <option value="" selected disabled>Select an area...</option>
                     <option value="Feeding Scheme">Feeding Scheme</option>
-                    <option value="Wildfire Conservation">Wildfire Conservation</option> 
+                    <option value="Wildfire Conservation">Wildfire Conservation</option>
                     <option value="Fundraising">Fundraising</option>
                     <option value="Emergency Response">Emergency Response</option>
                     <option value="Charitable Work">Charitable Work</option>
-               
+
                 </InputSelect>
                 <ValidationMessage For="@(() => volunteer.HelpType)" />
             </div>
@@ -63,7 +62,7 @@
                     <option value="Saturday-All">Saturday - all day</option>
                     <option value="Saturday-AM">Saturday - 08:00am to 12:00am</option>
                     <option value="Saturday-PM">Saturday - 13:00pm to 17:00</option>
-                    
+
                 </InputSelect>
                 <ValidationMessage For="@(() => volunteer.Availability)" />
             </div>
@@ -98,12 +97,12 @@
             successMessage = "Thank you for volunteering! We will be in touch soon.";
 
             // Use the alias here as well to create a new, blank object
-            volunteer = new VolunteerModel(); 
+            volunteer = new VolunteerModel();
         }
         catch (Exception ex)
         {
             // Log the error (visible in your application's console output)
-            Logger.LogError(ex, "Error saving volunteer.");
+            Console.WriteLine($"Error saving volunteer: {ex.Message}");
             successMessage = "An error occurred while submitting your form. Please try again.";
         }
     }

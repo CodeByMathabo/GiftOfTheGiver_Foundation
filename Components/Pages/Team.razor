@@ -5,7 +5,6 @@
 @using GiftOfTheGiver_Foundation.Data
 @using Microsoft.EntityFrameworkCore
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
-@inject ILogger<Team> Logger
 @using VolunteerModel = GiftOfTheGiver_Foundation.Models.Volunteer
 
 <PageTitle>Volunteer Team</PageTitle>
@@ -86,7 +85,6 @@
     {
         // Clear any old messages
         successMessage = null;
-
         try
         {
             await using var dbContext = await DbFactory.CreateDbContextAsync();
@@ -96,7 +94,7 @@
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error loading volunteers.");
+            Console.WriteLine($"Error loading volunteers: {ex.Message}");
         }
     }
 
@@ -114,7 +112,6 @@
 
                 // Set the success snackbar message
                 successMessage = $"Successfully approved {volunteer.VolunteerName}. REMINDER: Please contact them at {volunteer.VolunteerContact} to inform them and assign an event.";
-
                 // Update the item in the local list to refresh the UI
                 var itemInList = volunteers.FirstOrDefault(v => v.VolunteerId == volunteerId);
                 if (itemInList != null)
@@ -126,7 +123,7 @@
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error approving volunteer {VolunteerId}.", volunteerId);
+            Console.WriteLine($"Error approving volunteer {volunteerId}: {ex.Message}");
         }
     }
 
@@ -149,10 +146,11 @@
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error removing volunteer {VolunteerId}.", volunteerId);
+            Console.WriteLine($"Error removing volunteer {volunteerId}: {ex.Message}");
         }
     }
 
+    // Helper method to display full availability text
     private string GetFullAvailabilityText(string availabilityValue)
     {
         switch (availabilityValue)
