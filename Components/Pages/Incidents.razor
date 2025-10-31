@@ -59,7 +59,7 @@
 
                                     <button class="btn @(status == "Resolved" ? "btn-secondary" : "btn-success") btn-sm"
                                             @onclick="() => ResolveIncident(incident.DisasterReportId)"
-                                            disabled="@(status == "Resolved")">
+                                            disabled="@(!incident.AcknowledgedDate.HasValue || incident.ResolvedDate.HasValue)">
                                         @(status == "Resolved" ? "Resolved" : "Resolve")
                                     </button>
                                 </td>
