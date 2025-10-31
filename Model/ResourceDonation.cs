@@ -9,23 +9,25 @@ namespace GiftOfTheGiver_Foundation.Models
 
         [Required]
         [Display(Name = "Full Name")]
-        public string DonorFullName { get; set; } // [cite: 6]
+        public string DonorFullName { get; set; }
 
         [Required]
         [Display(Name = "Contact Number")]
-        public string ContactNumber { get; set; } // [cite: 7]
+        public string ContactNumber { get; set; }
 
         [Required]
         [Display(Name = "Item Type")]
-        public string ItemType { get; set; } // [cite: 8, 9]
+        public string ItemType { get; set; }
 
         [Required]
         public int Quantity { get; set; }
 
         [Required]
         [Display(Name = "Delivery Option")]
-        public string DeliveryOption { get; set; } // [cite: 10, 11]
+        public string DeliveryOption { get; set; }
 
         public DateTime PledgeDate { get; set; } = DateTime.UtcNow;
+
+        public DateTime? AuditDate { get; set; } // Nullable, as it's 'Pending' at first
     }
 }
