@@ -35,5 +35,8 @@ namespace GiftOfTheGiver_Foundation.Models
         [Required]
         [Display(Name = "Detailed Description")]
         public string Description { get; set; }
+
+        public DateTime? AcknowledgedDate { get; set; } // Tracks "Acknowledged" status
+        public DateTime? ResolvedDate { get; set; }     // Tracks "Resolved" status
     }
 }

@@ -1,5 +1,11 @@
 ﻿@page "/incidents"
 @layout Components.Layout.MainLayout
+@rendermode InteractiveServer
+
+@using GiftOfTheGiver_Foundation.Data
+@using GiftOfTheGiver_Foundation.Models
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
 
 <PageTitle>Manage Incidents</PageTitle>
 
@@ -24,42 +30,48 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>INC-001</td>
-                        <td>2025-10-30 09:15</td>
-                        <td>Flood</td>
-                        <td><span class="badge bg-danger">High</span></td>
-                        <td>123 Madiba St, Pretoria, Gauteng</td>
-                        <td><span class="badge bg-warning text-dark">Pending</span></td>
-                        <td>
-                            <button class="btn btn-primary btn-sm me-2">View Details</button>
-                            <button class="btn btn-success btn-sm">Resolve</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>INC-002</td>
-                        <td>2025-10-29 14:30</td>
-                        <td>Wildfire</td>
-                        <td><span class="badge bg-warning text-dark">Medium</span></td>
-                        <td>Stellenbosch, WC</td>
-                        <td><span class="badge bg-info">Acknowledged</span></td>
-                        <td>
-                            <button class="btn btn-primary btn-sm me-2">View Details</button>
-                            <button class="btn btn-success btn-sm">Resolve</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>INC-003</td>
-                        <td>2025-10-29 11:00</td>
-                        <td>Search and Rescue</td>
-                        <td><span class="badge bg-danger">High</span></td>
-                        <td>Durban, KZN</td>
-                        <td><span class="badge bg-success">Resolved</span></td>
-                        <td>
-                            <button class="btn btn-primary btn-sm me-2">Acknowledge</button>
-                            <button class="btn btn-secondary btn-sm" disabled>Resolved</button>
-                        </td>
-                    </tr>
+                    @if (incidents.Any())
+                    {
+                        @foreach (var incident in incidents)
+                        {
+                            var status = GetStatus(incident);
+                            <tr>
+                                <td>INC-@incident.DisasterReportId.ToString("D3")</td>
+                                <td>@incident.IncidentDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@incident.IncidentType</td>
+                                <td>
+                                    <span class="badge @GetUrgencyBadgeClass(incident.UrgencyLevel)">
+                                        @incident.UrgencyLevel
+                                    </span>
+                                </td>
+                                <td>@FormatLocation(incident)</td>
+                                <td>
+                                    <span class="badge @GetStatusBadgeClass(status)">
+                                        @status
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-primary btn-sm me-2"
+                                            @onclick="() => AcknowledgeIncident(incident.DisasterReportId)"
+                                            disabled="@(incident.AcknowledgedDate.HasValue)">
+                                        Acknowledge
+                                    </button>
+
+                                    <button class="btn @(status == "Resolved" ? "btn-secondary" : "btn-success") btn-sm"
+                                            @onclick="() => ResolveIncident(incident.DisasterReportId)"
+                                            disabled="@(status == "Resolved")">
+                                        @(status == "Resolved" ? "Resolved" : "Resolve")
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center">No incidents have been reported yet.</td>
+                        </tr>
+                    }
                 </tbody>
             </table>
         </div>
@@ -67,5 +79,114 @@
 </div>
 
 @code {
-    // C# logic to fetch and manage incidents will be added here.
+    private List<DisasterReport> incidents = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadIncidents();
+    }
+
+    private async Task LoadIncidents()
+    {
+        try
+        {
+            await using var dbContext = await DbFactory.CreateDbContextAsync();
+            incidents = await dbContext.DisasterReports
+                                .OrderByDescending(dr => dr.IncidentDate) // Show newest first
+                                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            // Use Console.WriteLine to avoid ambiguity with ILogger
+            Console.WriteLine($"Error loading incidents: {ex.Message}");
+        }
+    }
+
+    private string GetStatus(DisasterReport report)
+    {
+        if (report.ResolvedDate.HasValue) return "Resolved";
+        if (report.AcknowledgedDate.HasValue) return "Acknowledged";
+        return "Pending";
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        // Matches the badge classes from your file
+        return status switch
+        {
+            "Resolved" => "bg-success",
+            "Acknowledged" => "bg-info",
+            "Pending" => "bg-warning text-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetUrgencyBadgeClass(string urgency)
+    {
+        // Matches the badge classes from your file [cite: 67, 70, 73]
+        return urgency switch
+        {
+            "High" => "bg-danger",
+            "Medium" => "bg-warning text-dark",
+            "Low" => "bg-success", // Added "Low" for completeness
+            _ => "bg-secondary"
+        };
+    }
+
+    private string FormatLocation(DisasterReport report)
+    {
+        // Combines address parts into one string, like in your file [cite: 67, 71]
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(report.Address)) parts.Add(report.Address);
+        if (!string.IsNullOrWhiteSpace(report.City)) parts.Add(report.City);
+        if (!string.IsNullOrWhiteSpace(report.Province)) parts.Add(report.Province);
+        return string.Join(", ", parts);
+    }
+
+    private async Task AcknowledgeIncident(int incidentId)
+    {
+        try
+        {
+            await using var dbContext = await DbFactory.CreateDbContextAsync();
+            var incident = await dbContext.DisasterReports.FindAsync(incidentId);
+
+            if (incident != null && !incident.AcknowledgedDate.HasValue)
+            {
+                incident.AcknowledgedDate = DateTime.UtcNow;
+                await dbContext.SaveChangesAsync();
+                await LoadIncidents(); // Refresh the list
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error acknowledging incident {incidentId}: {ex.Message}");
+        }
+    }
+
+    private async Task ResolveIncident(int incidentId)
+    {
+        try
+        {
+            await using var dbContext = await DbFactory.CreateDbContextAsync();
+            var incident = await dbContext.DisasterReports.FindAsync(incidentId);
+
+            if (incident != null && !incident.ResolvedDate.HasValue)
+            {
+                incident.ResolvedDate = DateTime.UtcNow;
+
+                // If it wasn't acknowledged, resolving it also acknowledges it
+                if (!incident.AcknowledgedDate.HasValue)
+                {
+                    incident.AcknowledgedDate = incident.ResolvedDate;
+                }
+
+                await dbContext.SaveChangesAsync();
+                await LoadIncidents(); // Refresh the list
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error resolving incident {incidentId}: {ex.Message}");
+        }
+    }
 }
