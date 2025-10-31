@@ -4,8 +4,11 @@ namespace GiftOfTheGiver_Foundation.Models
 {
     public class IncidentAssignment
     {
-        public int IncidentAssignmentId { get; set; } // Primary Key
+        public int IncidentAssignmentId { get; set; }
         public DateTime AssignedDate { get; set; }
+
+        // register. null = not attended, (date) = attended
+        public DateTime? AttendedDate { get; set; }
 
         // Foreign Key to the DisasterReport
         public int DisasterReportId { get; set; }

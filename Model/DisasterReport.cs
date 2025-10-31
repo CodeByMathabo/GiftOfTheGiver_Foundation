@@ -38,5 +38,8 @@ namespace GiftOfTheGiver_Foundation.Models
 
         public DateTime? AcknowledgedDate { get; set; } // Tracks "Acknowledged" status
         public DateTime? ResolvedDate { get; set; }     // Tracks "Resolved" status
+
+        [Column(TypeName = "nvarchar(MAX)")]
+        public string? ResolutionNotes { get; set; } // Stores the admin's debriefing notes
     }
 }
