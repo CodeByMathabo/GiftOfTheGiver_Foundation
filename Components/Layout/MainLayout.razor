@@ -1,17 +1,16 @@
 ﻿@inherits LayoutComponentBase
 
-<CascadingAuthenticationState>
-    <div class="page">
+<div class="page-container">
 
+    <header class="top-nav-bar">
         <TopNav />
+    </header>
 
-        <main>
-            <article class="content px-4 py-4">
-                @Body
-            </article>
-        </main>
-    </div>
-</CascadingAuthenticationState>
+    <main class="main-content">
+        @Body
+    </main>
+
+</div>
 
 <div id="blazor-error-ui">
     An unhandled error has occurred.

@@ -9,6 +9,11 @@
 main {
     flex: 1;
     overflow-y: auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #FEFAE0;
     padding: 1.5rem; /* Added padding for content area */
 }
 
