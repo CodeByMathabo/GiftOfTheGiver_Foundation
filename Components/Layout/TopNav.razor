@@ -1,16 +1,30 @@
 ﻿@inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
+@using GiftOfTheGiver_Foundation.Components.Account
+@using GiftOfTheGiver_Foundation.Data
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityRedirectManager RedirectManager
+
+@if (!string.IsNullOrEmpty(logoutMessage))
+{
+    @* This snackbar will appear at the top right *@
+    <div class="snackbar success" role="alert" style="position: fixed; top: 1rem; right: 1rem; z-index: 9999;">
+        @logoutMessage
+    </div>
+}
 
 <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">
+        <a class="navbar-brand">
             <img src="/images/logo.png" alt="Logo" class="navbar-logo" />
-            <span>Gift of the Givers</span>
+            <p>Gift of the Givers</p>
         </a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNavBar" aria-controls="topNavBar" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
+
 
 
         <div class="collapse navbar-collapse" id="topNavBar">
@@ -19,38 +33,46 @@
                 <AuthorizeView Roles="Donor">
                     <li class="nav-item">
                         <NavLink class="nav-link" href="donation">
+
                             <span class="oi oi-gift" aria-hidden="true"></span> Donation
                         </NavLink>
                     </li>
                 </AuthorizeView>
 
                 <AuthorizeView Roles="Volunteer">
+
                     <li class="nav-item">
                         <NavLink class="nav-link" href="volunteer">
                             <span class="oi oi-people" aria-hidden="true"></span> Volunteer
                         </NavLink>
+
                     </li>
                     <li class="nav-item">
                         <NavLink class="nav-link" href="disaster-reporting">
                             <span class="oi oi-warning" aria-hidden="true"></span> Disaster Reporting
+
                         </NavLink>
                     </li>
                 </AuthorizeView>
 
                 <AuthorizeView Roles="Admin">
                     <li class="nav-item">
+
                         <NavLink class="nav-link" href="team">
                             <span class="oi oi-list-rich" aria-hidden="true"></span> Team
                         </NavLink>
                     </li>
+
                     <li class="nav-item">
                         <NavLink class="nav-link" href="audit-donations">
                             <span class="oi oi-clipboard" aria-hidden="true"></span> Audit Donations
+
                         </NavLink>
                     </li>
                     <li class="nav-item">
                         <NavLink class="nav-link" href="incidents">
-                            <span class="oi oi-inbox" aria-hidden="true"></span> Incoming Incidents
+                            <span class="oi
+oi-inbox" aria-hidden="true"></span> Incoming Incidents
                         </NavLink>
                     </li>
                 </AuthorizeView>
@@ -58,38 +80,71 @@
             </ul>
 
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <AuthorizeView>
-                        <Authorized>
-                            <li class="nav-item">
-                                <a class="nav-link" href="Account/Manage">
-                                    <span class="oi oi-person" aria-hidden="true"></span> Hello, @context.User.Identity?.Name
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <form action="Account/Logout" method="post">
-                                    <AntiforgeryToken />
-                                    <button type="submit" class="nav-link btn btn-link">
-                                        <span class="oi oi-account-logout" aria-hidden="true"></span> Logout
-                                    </button>
-                                </form>
-                            </li>
-                        </Authorized>
-                        <NotAuthorized>
-                            <li class="nav-item">
-                                <NavLink class="nav-link" href="Account/Register">
-                                    <span class="oi oi-person" aria-hidden="true"></span> Register
-                                </NavLink>
-                            </li>
-                            <li class="nav-item">
-                                <NavLink class="nav-link" href="Account/Login">
-                                    <span class="oi oi-account-login" aria-hidden="true"></span> Login
-                                </NavLink>
-                            </li>
-                        </NotAuthorized>
-                    </AuthorizeView>
-                </li>
+
+                <AuthorizeView>
+                    <Authorized>
+                        <li class="nav-item">
+                            <a class="nav-link" href="Account/Manage">
+
+                                <span class="oi oi-person" aria-hidden="true"></span> Hello, @context.User.Identity?.Name
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(isLoggingOut ? "disabled" : "")" href="#" @onclick="HandleLogout" @onclick:preventDefault="true" style="cursor: pointer;">
+                                @if (isLoggingOut)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <span>Logging out...</span>
+                                }
+                                else
+                                {
+                                    <span class="oi oi-account-logout" aria-hidden="true"></span>
+                                    <span>Logout</span>
+                                }
+                            </a>
+                        </li>
+                    </Authorized>
+
+                    <NotAuthorized>
+                        <li class="nav-item">
+                            <NavLink class="nav-link" href="Account/Register">
+                                <span class="oi
+oi-person" aria-hidden="true"></span> Register
+                            </NavLink>
+                        </li>
+                        <li class="nav-item">
+
+                            <NavLink class="nav-link" href="Account/Login">
+                                <span class="oi oi-account-login" aria-hidden="true"></span> Login
+                            </NavLink>
+                        </li>
+
+                    </NotAuthorized>
+                </AuthorizeView>
             </ul>
         </div>
     </div>
 </nav>
+
+@code {
+    private bool isLoggingOut = false;
+    private string? logoutMessage;
+
+    private async Task HandleLogout()
+    {
+        // Prevent clicking the link multiple times
+        if (isLoggingOut) return;
+
+        isLoggingOut = true;
+        logoutMessage = "Logging out successfully...";
+        await InvokeAsync(StateHasChanged);
+
+        // Wait for 1.5 seconds so the user can read the message
+        await Task.Delay(5000);
+
+        await SignInManager.SignOutAsync();
+
+        // Use the IdentityRedirectManager for a clean, enhanced navigation
+        RedirectManager.RedirectTo("/");
+    }
+}

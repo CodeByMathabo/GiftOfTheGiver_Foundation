@@ -10,13 +10,18 @@
         <div class="action-buttons">
             <button class="btn btn-primary-custom" @onclick="NavigateToLogin">Login</button>
             <button class="btn btn-secondary-custom" @onclick="NavigateToRegister">Register</button>
+
         </div>
     </div>
 </div>
 
 @code {
     [Inject]
-    private NavigationManager NavigationManager { get; set; } = null!;
+    private NavigationManager NavigationManager
+    {
+        get;
+        set;
+    } = null!;
 
     private void NavigateToLogin()
     {

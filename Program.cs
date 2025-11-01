@@ -59,7 +59,14 @@ app.MapRazorComponents<App>()
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
 
-// --- ADD NEW DOWNLOAD ENDPOINTS HERE ---
+// This creates a new, simple GET endpoint for logging out.
+app.MapGet("/Account/Logout", async (SignInManager<ApplicationUser> signInManager) =>
+{
+    await signInManager.SignOutAsync();
+    return Results.LocalRedirect("/");
+});
+
+// --- NEW DOWNLOAD ENDPOINTS ---
 
 // Endpoint for Monetary Donations CSV
 app.MapGet("/download/monetary-csv", async (IDbContextFactory<ApplicationDbContext> dbFactory) =>
