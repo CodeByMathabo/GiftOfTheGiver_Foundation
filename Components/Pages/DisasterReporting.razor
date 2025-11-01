@@ -1,9 +1,11 @@
 ﻿@page "/disaster-reporting"
+@attribute [Authorize(Roles = "Volunteer")]
 @layout Components.Layout.MainLayout
 @rendermode InteractiveServer
 
 @using GiftOfTheGiver_Foundation.Data
 @using GiftOfTheGiver_Foundation.Models
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject ILogger<DisasterReporting> Logger
@@ -17,6 +19,7 @@
     <div class="card-body">
 
         <EditForm Model="@report" OnValidSubmit="@HandleSubmit" FormName="DisasterReportForm">
+            <AntiforgeryToken />
             <DataAnnotationsValidator />
 
             @if (!string.IsNullOrEmpty(successMessage))

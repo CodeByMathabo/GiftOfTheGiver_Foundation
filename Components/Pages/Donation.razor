@@ -1,6 +1,8 @@
 ﻿@page "/donation"
+@attribute [Authorize(Roles = "Donor")]
 @using GiftOfTheGiver_Foundation.Data
 @using GiftOfTheGiver_Foundation.Models 
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 @rendermode InteractiveServer
@@ -24,6 +26,7 @@
         </div>
 
         <EditForm Model="@newMonetaryDonation" OnValidSubmit="HandleMonetarySubmit" FormName="MonetaryForm">
+            <AntiforgeryToken />
             <DataAnnotationsValidator />
 
             @if (!string.IsNullOrEmpty(monetaryMessage))
@@ -59,6 +62,7 @@
         <p>Pledge resources or items. Our team will coordinate with you for collection or drop-off.</p>
 
         <EditForm Model="@newResourceDonation" OnValidSubmit="HandleResourceSubmit" FormName="ResourceForm">
+            <AntiforgeryToken />
             <DataAnnotationsValidator />
 
             @if (!string.IsNullOrEmpty(resourceMessage))

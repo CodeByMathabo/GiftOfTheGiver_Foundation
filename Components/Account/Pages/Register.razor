@@ -1,6 +1,5 @@
 ﻿@page "/Account/Register"
 @layout Components.Layout.AuthLayout
-@attribute [IgnoreAntiforgeryToken]
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
@@ -18,6 +17,7 @@
 <p class="form-subtitle">Join us and make a difference</p>
 
 <EditForm Model="Input" OnValidSubmit="RegisterUser" FormName="register" Enhance>
+    <AntiforgeryToken />
     <DataAnnotationsValidator />
 
     @if (!string.IsNullOrEmpty(errorMessage))
@@ -49,6 +49,16 @@
         <label for="confirm-password">Confirm Password</label>
         <InputText id="confirm-password" @bind-Value="Input.ConfirmPassword" type="password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
         <ValidationMessage For="() => Input.ConfirmPassword" class="validation-message" />
+    </div>
+
+    <div class="form-group">
+        <label for="role">Register as</label>
+        <InputSelect id="role" @bind-Value="Input.Role" class="form-control">
+            <option value="">Select a role...</option>
+            <option value="Donor">Donor</option>
+            <option value="Volunteer">Volunteer</option>
+        </InputSelect>
+        <ValidationMessage For="() => Input.Role" class="validation-message" />
     </div>
 
     <button disabled="@isProcessing" type="submit" class="btn btn-primary btn-block">
@@ -90,6 +100,11 @@
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; } = "";
+
+        // Role Property to enable users select their role when they register
+        [Required]
+        [Display(Name = "Register as")]
+        public string Role { get; set; } = "";
     }
 
     public async Task RegisterUser()
@@ -102,16 +117,20 @@
         try
         {
             var user = CreateUser();
-
             await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
             var emailStore = (IUserEmailStore<ApplicationUser>)UserStore;
             await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
 
             var result = await UserManager.CreateAsync(user, Input.Password);
-
             if (result.Succeeded)
             {
-                errorMessage = null;
+                // Assign the selected role (Donor or Volunteer)
+                if (Input.Role == "Donor" || Input.Role == "Volunteer")
+                {
+                    await UserManager.AddToRoleAsync(user, Input.Role);
+                }
+
+                // This message is set, but the redirect will happen before it's seen.
                 successMessage = "Account created successfully! You can now login.";
                 Input = new(); // Clear the form
 
@@ -120,7 +139,6 @@
                 code = System.Web.HttpUtility.UrlEncode(code);
                 var callbackUrl = NavigationManager.ToAbsoluteUri(
                     $"/Account/ConfirmEmail?userId={userId}&code={code}&returnUrl=/");
-
                 await EmailSender.SendConfirmationLinkAsync(user, Input.Email, callbackUrl.AbsoluteUri);
 
                 if (UserManager.Options.SignIn.RequireConfirmedAccount)
@@ -141,6 +159,13 @@
                 errorMessage = string.Join("\n", result.Errors.Select(e => e.Description));
             }
         }
+
+        catch (NavigationException)
+        {
+            // This is an expected exception for enhanced form redirects. Re-throw it so the Blazor framework can handle the navigation.
+            throw;
+        }
+
         catch (Exception ex)
         {
             successMessage = null;
@@ -157,7 +182,14 @@
     {
         try
         {
-            return Activator.CreateInstance<ApplicationUser>();
+            // Create the user instance
+            var user = Activator.CreateInstance<ApplicationUser>();
+
+            // every new user created will automatically have their account marked as "confirmed" in the database
+            user.EmailConfirmed = true;
+
+            // Return the modified user
+            return user;
         }
         catch
         {

@@ -19,21 +19,16 @@ builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
-builder.Services.AddAuthentication(options =>
-    {
-        options.DefaultScheme = IdentityConstants.ApplicationScheme;
-        options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
-    })
-    .AddIdentityCookies();
-
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+// This adds the services needed for RoleManager and IdentityRole
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
+    .AddRoles<IdentityRole>() 
     .AddDefaultTokenProviders();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
@@ -54,12 +49,12 @@ else
 
 app.UseHttpsRedirection();
 
-
+app.MapStaticAssets();
 app.UseAntiforgery();
 
-app.MapStaticAssets();
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+    .AddInteractiveServerRenderMode()
+    .DisableAntiforgery();
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
@@ -119,5 +114,46 @@ app.MapGet("/download/resource-csv", async (IDbContextFactory<ApplicationDbConte
     var fileName = $"resource-donations-{DateTime.UtcNow:yyyyMMdd}.csv";
     return Results.File(Encoding.UTF8.GetBytes(builder.ToString()), "text/csv", fileName);
 });
+
+// Seed roles and default admin user
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+    string[] roleNames = { "Admin", "Donor", "Volunteer" };
+    IdentityResult roleResult;
+
+    foreach (var roleName in roleNames)
+    {
+        var roleExist = await roleManager.RoleExistsAsync(roleName);
+        if (!roleExist)
+        {
+            // Create the roles and seed them to the database
+            roleResult = await roleManager.CreateAsync(new IdentityRole(roleName));
+        }
+    }
+
+    // Create a default Admin user
+    var adminUser = await userManager.FindByEmailAsync("admin@example.com");
+    if (adminUser == null)
+    {
+        var newAdminUser = new ApplicationUser
+        {
+            UserName = "admin@example.com",
+            Email = "admin@example.com",
+            EmailConfirmed = true // Confirm email immediately for admin
+        };
+
+        // !! CHANGE THIS PASSWORD to something secure
+        var result = await userManager.CreateAsync(newAdminUser, "StrongAdminP@ssw0rd!");
+
+        if (result.Succeeded)
+        {
+            // Assign the 'Admin' role
+            await userManager.AddToRoleAsync(newAdminUser, "Admin");
+        }
+    }
+}
 
 app.Run();

@@ -1,9 +1,11 @@
 ﻿@page "/incidents"
+@attribute [Authorize(Roles = "Admin")]
 @layout Components.Layout.MainLayout
 @rendermode InteractiveServer
 
 @using GiftOfTheGiver_Foundation.Data
 @using GiftOfTheGiver_Foundation.Models
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using GiftOfTheGiver_Foundation.Components.Account.Shared
 @using VolunteerModel = GiftOfTheGiver_Foundation.Models.Volunteer
@@ -12,7 +14,7 @@
 <PageTitle>Manage Incidents</PageTitle>
 
 <div class="report-card">
-    @* ... (The card-header and card-body <p> are unchanged) ... *@
+    <AntiforgeryToken />
     <div class="card-header">
         <h3 class="card-header-title">Manage Incoming Incidents</h3>
     </div>

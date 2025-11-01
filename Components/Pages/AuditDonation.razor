@@ -1,9 +1,11 @@
 ﻿@page "/audit-donations"
+@attribute [Authorize(Roles = "Admin")]
 @layout Components.Layout.MainLayout
 @rendermode InteractiveServer
 
 @using GiftOfTheGiver_Foundation.Data
 @using GiftOfTheGiver_Foundation.Models
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using System.Globalization
 @inject NavigationManager NavManager
@@ -12,6 +14,7 @@
 <PageTitle>Audit Donations</PageTitle>
 
 <div class="report-card">
+    <AntiforgeryToken />
     <div class="card-header">
         <h3 class="card-header-title">Monetary Donations Audit</h3>
     </div>

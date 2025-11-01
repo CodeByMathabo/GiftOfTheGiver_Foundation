@@ -1,8 +1,10 @@
 ﻿@page "/team"
+@attribute [Authorize(Roles = "Admin")]
 @layout Components.Layout.MainLayout
 @rendermode InteractiveServer
 
 @using GiftOfTheGiver_Foundation.Data
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 @using VolunteerModel = GiftOfTheGiver_Foundation.Models.Volunteer
@@ -10,6 +12,7 @@
 <PageTitle>Volunteer Team</PageTitle>
 
 <div class="report-card">
+    <AntiforgeryToken />
     <div class="card-header">
         <h3 class="card-header-title">Volunteer Team</h3>
     </div>

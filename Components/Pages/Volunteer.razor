@@ -1,8 +1,10 @@
 ﻿@page "/volunteer"
+@attribute [Authorize(Roles = "Volunteer")]
 @rendermode InteractiveServer
 
 @using GiftOfTheGiver_Foundation.Data
 @using GiftOfTheGiver_Foundation.Models
+@using Microsoft.AspNetCore.Authorization
 @using VolunteerModel = GiftOfTheGiver_Foundation.Models.Volunteer
 @using Microsoft.EntityFrameworkCore
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
@@ -17,6 +19,7 @@
         <p>Join our team by filling out your details below. Your time and skills can make a real difference.</p>
 
         <EditForm Model="@volunteer" OnValidSubmit="@HandleSubmit" FormName="VolunteerForm">
+            <AntiforgeryToken />
             <DataAnnotationsValidator />
 
             @if (!string.IsNullOrEmpty(successMessage))
