@@ -43,11 +43,6 @@
         <ValidationMessage For="() => Input.Password" class="validation-message" />
     </div>
 
-    <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; color: #ccc;">
-        <InputCheckbox @bind-Value="Input.RememberMe" id="remember-me" style="width: auto;" />
-        <label for="remember-me" style="margin: 0; font-weight: normal;">Remember me</label>
-    </div>
-
     <button disabled="@isProcessing" type="submit" class="btn btn-primary btn-block">
         @if (isProcessing)
         {
@@ -66,10 +61,6 @@
 <p class="text-center">
     <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">Register as a new user</a>
 </p>
-<p class="text-center">
-    <a href="Account/ResendEmailConfirmation">Resend email confirmation</a>
-</p>
-
 
 @code {
     private bool isProcessing = false;
