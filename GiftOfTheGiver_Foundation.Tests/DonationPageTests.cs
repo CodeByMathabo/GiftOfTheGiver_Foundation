@@ -117,8 +117,7 @@ namespace GiftOfTheGiver_Foundation.Tests
                 Delivery = "DropOff"
             };
 
-            // Find each element from the root 'cut' immediately before
-            // calling .Change() to avoid stale element references from re-renders.
+            // Find each element from the root 'cut' immediately before calling .Change() to avoid stale element references from re-renders.
             cut.Find("input[id='resourceDonorName']").Change(testData.FullName);
             cut.Find("input[id='donorContact']").Change(testData.Contact);
             cut.Find("select[id='donationType']").Change(testData.ItemType);
@@ -130,7 +129,7 @@ namespace GiftOfTheGiver_Foundation.Tests
             await resourceForm.SubmitAsync();
 
             // After submission, the component re-renders.
-            // We must find the form again to look for the success message inside it.
+            // find the form again to look for the success message inside it.
             var formAfterSubmit = cut.Find("input[id='resourceDonorName']").Closest("form");
             var successMessageElement = formAfterSubmit.QuerySelector(".alert-success");
 
