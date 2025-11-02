@@ -1,0 +1,97 @@
+﻿.auth-layout-full-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #3A5A40;
+    /* The background image path from the old project is assumed. */
+    /* Update '/images/regi.jpg' if path is different in new project. */
+    background-image: url(/images/regi.jpg);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: #A3B18A;
+}
+
+.auth-navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 3rem;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    color: #A3B18A;
+    font-size: 22px;
+}
+
+.auth-navbar-left {
+    font-family: 'Alata', sans-serif;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #fff;
+}
+
+.auth-navbar-right {
+    display: flex;
+    gap: 2rem;
+}
+
+.auth-nav-link {
+    font-family: 'Fredoka', sans-serif;
+    color: #fff;
+    text-decoration: none;
+    padding: 0.5rem 0.5rem;
+    border-radius: 4px;
+    transition: background-color 0.2s ease-in-out;
+}
+
+    .auth-nav-link:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+.auth-content-area {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem 1rem;
+}
+
+.auth-form-card-wrapper {
+    width: 100%;
+    max-width: 450px;
+    background-color: rgba(30, 30, 30, 0.85);
+    border: 1px solid #444;
+    border-radius: 12px;
+    padding: 2.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+    .auth-navbar {
+        padding: 1rem 1.5rem;
+    }
+
+    .auth-navbar-left {
+        font-size: 1.2rem;
+    }
+
+    .auth-nav-link {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 500px) {
+    .auth-content-area {
+        align-items: flex-start;
+        padding: 1rem;
+    }
+
+    .auth-form-card-wrapper {
+        padding: 1.5rem;
+        background-color: rgba(30, 30, 30, 0.9);
+    }
+}

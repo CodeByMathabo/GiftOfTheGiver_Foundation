@@ -1,0 +1,200 @@
+﻿@page "/Account/Register"
+@layout Components.Layout.AuthLayout
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using GiftOfTheGiver_Foundation.Data
+@using Microsoft.AspNetCore.Mvc
+
+@inject UserManager<ApplicationUser> UserManager
+@inject IUserStore<ApplicationUser> UserStore
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IEmailSender<ApplicationUser> EmailSender
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+
+<h3 class="form-title">Create Account</h3>
+<p class="form-subtitle">Join us and make a difference</p>
+
+<EditForm Model="Input" OnValidSubmit="RegisterUser" FormName="register" Enhance>
+    <AntiforgeryToken />
+    <DataAnnotationsValidator />
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="snackbar error" role="alert">
+            @((MarkupString)errorMessage.Replace("\n", "<br/>"))
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="snackbar success" role="alert">
+            @successMessage
+        </div>
+    }
+
+    <div class="form-group">
+        <label for="email">Email</label>
+        <InputText id="email" @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+        <ValidationMessage For="() => Input.Email" class="validation-message" />
+    </div>
+
+    <div class="form-group">
+        <label for="password">Password</label>
+        <InputText id="password" @bind-Value="Input.Password" type="password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+        <ValidationMessage For="() => Input.Password" class="validation-message" />
+    </div>
+
+    <div class="form-group">
+        <label for="confirm-password">Confirm Password</label>
+        <InputText id="confirm-password" @bind-Value="Input.ConfirmPassword" type="password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+        <ValidationMessage For="() => Input.ConfirmPassword" class="validation-message" />
+    </div>
+
+    <div class="form-group">
+        <label for="role">Register as</label>
+        <InputSelect id="role" @bind-Value="Input.Role" class="form-control">
+            <option value="">Select a role...</option>
+            <option value="Donor">Donor</option>
+            <option value="Volunteer">Volunteer</option>
+        </InputSelect>
+        <ValidationMessage For="() => Input.Role" class="validation-message" />
+    </div>
+
+    <button disabled="@isProcessing" type="submit" class="btn btn-primary btn-block">
+        @if (isProcessing)
+        {
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        }
+        else
+        {
+            <span>Register</span>
+        }
+    </button>
+</EditForm>
+
+<p class="text-center">
+    Already have an account? <a href="/Account/Login">Login</a>
+</p>
+
+@code {
+    private bool isProcessing = false;
+    private string? errorMessage;
+    private string? successMessage;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    private class InputModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = "";
+
+        [Required]
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = "";
+
+        [DataType(DataType.Password)]
+        [Display(Name = "Confirm password")]
+        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+        public string ConfirmPassword { get; set; } = "";
+
+        // Role Property to enable users select their role when they register
+        [Required]
+        [Display(Name = "Register as")]
+        public string Role { get; set; } = "";
+    }
+
+    public async Task RegisterUser()
+    {
+        isProcessing = true;
+        errorMessage = null;
+        successMessage = null;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var user = CreateUser();
+            await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+            var emailStore = (IUserEmailStore<ApplicationUser>)UserStore;
+            await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+
+            var result = await UserManager.CreateAsync(user, Input.Password);
+            if (result.Succeeded)
+            {
+                // Assign the selected role (Donor or Volunteer)
+                if (Input.Role == "Donor" || Input.Role == "Volunteer")
+                {
+                    await UserManager.AddToRoleAsync(user, Input.Role);
+                }
+
+                // This message is set, but the redirect will happen before it's seen.
+                successMessage = "Account created successfully! You can now login.";
+                Input = new(); // Clear the form
+
+                var userId = await UserManager.GetUserIdAsync(user);
+                var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+                code = System.Web.HttpUtility.UrlEncode(code);
+                var callbackUrl = NavigationManager.ToAbsoluteUri(
+                    $"/Account/ConfirmEmail?userId={userId}&code={code}&returnUrl=/");
+                await EmailSender.SendConfirmationLinkAsync(user, Input.Email, callbackUrl.AbsoluteUri);
+
+                if (UserManager.Options.SignIn.RequireConfirmedAccount)
+                {
+                    RedirectManager.RedirectTo(
+                        "/Account/RegisterConfirmation",
+                        new() { ["email"] = Input.Email, ["returnUrl"] = "/" });
+                }
+                else
+                {
+                    await SignInManager.SignInAsync(user, isPersistent: false);
+                    RedirectManager.RedirectTo("/");
+                }
+            }
+            else
+            {
+                successMessage = null;
+                errorMessage = string.Join("\n", result.Errors.Select(e => e.Description));
+            }
+        }
+
+        catch (NavigationException)
+        {
+            // This is an expected exception for enhanced form redirects. Re-throw it so the Blazor framework can handle the navigation.
+            throw;
+        }
+
+        catch (Exception ex)
+        {
+            successMessage = null;
+            errorMessage = $"An unexpected error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isProcessing = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private ApplicationUser CreateUser()
+    {
+        try
+        {
+            // Create the user instance
+            var user = Activator.CreateInstance<ApplicationUser>();
+
+            // every new user created will automatically have their account marked as "confirmed" in the database
+            user.EmailConfirmed = true;
+
+            // Return the modified user
+            return user;
+        }
+        catch
+        {
+            throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " +
+                $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor.");
+        }
+    }
+}

@@ -1,0 +1,249 @@
+﻿@page "/audit-donations"
+@attribute [Authorize(Roles = "Admin")]
+@layout Components.Layout.MainLayout
+@rendermode InteractiveServer
+
+@using GiftOfTheGiver_Foundation.Data
+@using GiftOfTheGiver_Foundation.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using System.Globalization
+@inject NavigationManager NavManager
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+
+<PageTitle>Audit Donations</PageTitle>
+
+<div class="report-card">
+    <AntiforgeryToken />
+    <div class="card-header">
+        <h3 class="card-header-title">Monetary Donations Audit</h3>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <button class="btn btn-info btn-sm" @onclick="DownloadMonetaryCsv">Download Monetary CSV Report</button>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Donation ID</th>
+                        <th>Donor Full Name</th>
+                        <th>Amount (ZAR)</th>
+                        <th>Pledge Date</th>
+                        <th>Audit Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (monetaryDonations.Any())
+                    {
+                        @foreach (var donation in monetaryDonations)
+                        {
+                            <tr>
+                                <td>MON-@donation.Id.ToString("D3")</td>
+                                <td>@donation.DonorFullName</td>
+                                <td>@donation.Amount.ToString("C", zaCulture)</td>
+                                <td>@donation.DonationDate.ToShortDateString()</td>
+                                <td>
+                                    @if (donation.AuditDate.HasValue)
+                                    {
+                                        <span>@donation.AuditDate.Value.ToShortDateString()</span>
+                                    }
+                                    else
+                                    {
+                                        <em>(Pending)</em>
+                                    }
+                                </td>
+                                <td>
+                                    @if (donation.AuditDate.HasValue)
+                                    {
+                                        <button class="btn btn-secondary btn-sm" disabled>Approved</button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-success btn-sm" @onclick="() => ApproveMonetary(donation.Id)">Approve</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center">No monetary donations found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="report-card">
+    <div class="card-header">
+        <h3 class="card-header-title">Resource Donations Audit</h3>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <button class="btn btn-info btn-sm" @onclick="DownloadResourceCsv">Download Resource CSV Report</button>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Pledge ID</th>
+                        <th>Donor Full Name</th>
+                        <th>Contact Number</th>
+                        <th>Item</th>
+                        <th>Quantity</th>
+                        <th>Delivery</th>
+                        <th>Pledge Date</th>
+                        <th>Audit Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (resourceDonations.Any())
+                    {
+                        @foreach (var donation in resourceDonations)
+                        {
+                            <tr>
+                                <td>RES-@donation.Id.ToString("D3")</td>
+                                <td>@donation.DonorFullName</td>
+                                <td>@donation.ContactNumber</td>
+                                <td>@donation.ItemType</td>
+                                <td>@donation.Quantity</td>
+                                <td>@donation.DeliveryOption</td>
+                                <td>@donation.PledgeDate.ToShortDateString()</td>
+                                <td>
+                                    @if (donation.AuditDate.HasValue)
+                                    {
+                                        <span>@donation.AuditDate.Value.ToShortDateString()</span>
+                                    }
+                                    else
+                                    {
+                                        <em>(Pending)</em>
+                                    }
+                                </td>
+                                <td>
+                                    @if (donation.AuditDate.HasValue)
+                                    {
+                                        <button class="btn btn-secondary btn-sm" disabled>Approved</button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-success btn-sm" @onclick="() => ApproveResource(donation.Id)">Approve</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center">No resource donations found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<MonetaryDonation> monetaryDonations = new();
+    private List<ResourceDonation> resourceDonations = new();
+    private CultureInfo zaCulture = new CultureInfo("en-ZA"); // For "R" currency format
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDonations();
+    }
+
+    private async Task LoadDonations()
+    {
+        try
+        {
+            await using var dbContext = await DbFactory.CreateDbContextAsync();
+
+            monetaryDonations = await dbContext.MonetaryDonation
+                                    .OrderByDescending(d => d.DonationDate)
+                                    .ToListAsync();
+
+            resourceDonations = await dbContext.ResourceDonation
+                                    .OrderByDescending(d => d.PledgeDate)
+                                    .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading donations: {ex.Message}");
+        }
+    }
+
+    private async Task ApproveMonetary(int donationId)
+    {
+        try
+        {
+            await using var dbContext = await DbFactory.CreateDbContextAsync();
+            var donation = await dbContext.MonetaryDonation.FindAsync(donationId);
+
+            if (donation != null && !donation.AuditDate.HasValue)
+            {
+                donation.AuditDate = DateTime.UtcNow;
+                await dbContext.SaveChangesAsync();
+
+                // Update the item in the local list to refresh the UI
+                var itemInList = monetaryDonations.FirstOrDefault(d => d.Id == donationId);
+                if (itemInList != null)
+                {
+                    itemInList.AuditDate = donation.AuditDate;
+                    StateHasChanged();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error approving monetary donation {donationId}: {ex.Message}");
+        }
+    }
+
+    private async Task ApproveResource(int donationId)
+    {
+        try
+        {
+            await using var dbContext = await DbFactory.CreateDbContextAsync();
+            var donation = await dbContext.ResourceDonation.FindAsync(donationId);
+
+            if (donation != null && !donation.AuditDate.HasValue)
+            {
+                donation.AuditDate = DateTime.UtcNow;
+                await dbContext.SaveChangesAsync();
+
+                // Update the item in the local list to refresh the UI
+                var itemInList = resourceDonations.FirstOrDefault(d => d.Id == donationId);
+                if (itemInList != null)
+                {
+                    itemInList.AuditDate = donation.AuditDate;
+                    StateHasChanged();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error approving resource donation {donationId}: {ex.Message}");
+        }
+    }
+
+    private void DownloadMonetaryCsv()
+{
+    // This navigates the browser to the new endpoint, which triggers the download.
+    // 'forceLoad: true' is essential for this to work from a Blazor Server app.
+    NavManager.NavigateTo("/download/monetary-csv", forceLoad: true);
+}
+
+private void DownloadResourceCsv()
+{
+    // This navigates the browser to the new endpoint, which triggers the download.
+    NavManager.NavigateTo("/download/resource-csv", forceLoad: true);
+}
+}

@@ -1,0 +1,204 @@
+﻿@page "/incidents"
+@attribute [Authorize(Roles = "Admin")]
+@layout Components.Layout.MainLayout
+@rendermode InteractiveServer
+
+@using GiftOfTheGiver_Foundation.Data
+@using GiftOfTheGiver_Foundation.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using GiftOfTheGiver_Foundation.Components.Account.Shared
+@using VolunteerModel = GiftOfTheGiver_Foundation.Models.Volunteer
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+
+<PageTitle>Manage Incidents</PageTitle>
+
+<div class="report-card">
+    <AntiforgeryToken />
+    <div class="card-header">
+        <h3 class="card-header-title">Manage Incoming Incidents</h3>
+    </div>
+    <div class="card-body">
+        <p>Review, acknowledge, and resolve all incoming disaster reports from this panel.</p>
+
+        <div class="table-responsive">
+            <table class="table table-striped">
+                @* ... (The <thead> is unchanged) ... *@
+                <thead>
+                    <tr>
+                        <th>Incident ID</th>
+                        <th>Date Reported</th>
+                        <th>Type</th>
+                        <th>Urgency</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (incidents.Any())
+                    {
+                        @foreach (var incident in incidents)
+                        {
+                            var status = GetStatus(incident);
+                            <tr>
+                                @* ... (The <td> elements for ID, Date, Type, Urgency, Location, Status are unchanged) ... *@
+                                <td>INC-@incident.DisasterReportId.ToString("D3")</td>
+                                <td>@incident.IncidentDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@incident.IncidentType</td>
+                                <td>
+                                    <span class="badge @GetUrgencyBadgeClass(incident.UrgencyLevel)">
+                                        @incident.UrgencyLevel
+                                    </span>
+                                </td>
+                                <td>@FormatLocation(incident)</td>
+                                <td>
+                                    <span class="badge @GetStatusBadgeClass(status)">
+                                        @status
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <button class="btn btn-primary btn-sm me-2"
+                                            @onclick="() => AcknowledgeIncident(incident.DisasterReportId)"
+                                            disabled="@(incident.AcknowledgedDate.HasValue)">
+                                        Acknowledge
+                                    </button>
+
+                                    <button class="btn @(status == "Resolved" ? "btn-secondary" : "btn-success") btn-sm"
+                                            @onclick="() => OpenDebriefModal(incident.DisasterReportId)"
+                                            disabled="@(!incident.AcknowledgedDate.HasValue || incident.ResolvedDate.HasValue)">
+                                        @(status == "Resolved" ? "Resolved" : "Resolve")
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        @* ... (The "No incidents" <tr> is unchanged) ... *@
+                        <tr>
+                            <td colspan="7" class="text-center">No incidents have been reported yet.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@if (isAssignModalVisible)
+{
+    <AssignVolunteersModal IncidentId="selectedIncidentId" OnClose="HandleModalClose" />
+}
+
+@if (isDebriefModalVisible)
+{
+    <DebriefIncidentModal IncidentId="selectedIncidentId" OnClose="HandleDebriefModalClose" />
+}
+
+
+@code {
+    private List<DisasterReport> incidents = new();
+
+    // --- State variables for Assign Modal ---
+    private bool isAssignModalVisible = false;
+    private int selectedIncidentId = 0;
+
+    // --- NEW STATE VARIABLES FOR DEBRIEF MODAL ---
+    private bool isDebriefModalVisible = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadIncidents();
+    }
+
+    private async Task LoadIncidents()
+    {
+        isAssignModalVisible = false;
+        isDebriefModalVisible = false; // Ensure this is also closed on load
+        try
+        {
+            await using var dbContext = await DbFactory.CreateDbContextAsync();
+            incidents = await dbContext.DisasterReports
+                                .OrderByDescending(dr => dr.IncidentDate)
+                                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading incidents: {ex.Message}");
+        }
+    }
+
+    // ... (GetStatus, GetStatusBadgeClass, GetUrgencyBadgeClass, FormatLocation are unchanged) ...
+    private string GetStatus(DisasterReport report)
+    {
+        if (report.ResolvedDate.HasValue) return "Resolved";
+        if (report.AcknowledgedDate.HasValue) return "Acknowledged";
+        return "Pending";
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Resolved" => "bg-success",
+            "Acknowledged" => "bg-info",
+            "Pending" => "bg-warning text-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetUrgencyBadgeClass(string urgency)
+    {
+        return urgency switch
+        {
+            "High" => "bg-danger",
+            "Medium" => "bg-warning text-dark",
+            "Low" => "bg-success",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string FormatLocation(DisasterReport report)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(report.Address)) parts.Add(report.Address);
+        if (!string.IsNullOrWhiteSpace(report.City)) parts.Add(report.City);
+        if (!string.IsNullOrWhiteSpace(report.Province)) parts.Add(report.Province);
+        return string.Join(", ", parts);
+    }
+
+    // --- AcknowledgeIncident and HandleModalClose are unchanged ---
+    private void AcknowledgeIncident(int incidentId)
+    {
+        selectedIncidentId = incidentId;
+        isAssignModalVisible = true;
+    }
+
+    private async Task HandleModalClose()
+    {
+        isAssignModalVisible = false;
+        await LoadIncidents();
+        StateHasChanged();
+    }
+
+    // --- 'ResolveIncident' is RENAMED and UPDATED ---
+    private void OpenDebriefModal(int incidentId)
+    {
+        // This method no longer saves. It just opens the debrief modal.
+        selectedIncidentId = incidentId;
+        isDebriefModalVisible = true;
+    }
+
+    // --- NEW METHOD to handle the debrief modal closing ---
+    private async Task HandleDebriefModalClose()
+    {
+        isDebriefModalVisible = false;
+        await LoadIncidents(); // Refresh the main list
+        StateHasChanged(); // Tell Blazor to re-render
+    }
+
+    // The old ResolveIncident(int incidentId) method is no longer needed
+    // as that logic now lives inside DebriefIncidentModal.razor
+}

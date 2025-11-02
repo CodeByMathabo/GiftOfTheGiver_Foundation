@@ -1,0 +1,31 @@
+﻿.manage-sidebar {
+    background-color: #3A5A40;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    font-family: 'Alata', sans-serif;
+}
+
+    /* Make link text white to be readable on the dark background */
+    .manage-sidebar .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        color: #E0E0E0;
+        transition: background-color 0.2s, color 0.2s;
+        font-family: 'Fredoka', sans-serif;
+        font-weight: 400;
+    }
+
+        /* Style for the active/selected link (like "Profile" in your screenshot) */
+        .manage-sidebar .nav-link.active {
+            color: #FFFFFF;
+            font-weight: 500;
+            background-color: #588157;
+        }
+
+        /* Make links slightly lighter on hover when they are not active */
+        .manage-sidebar .nav-link:not(.active):hover {
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }

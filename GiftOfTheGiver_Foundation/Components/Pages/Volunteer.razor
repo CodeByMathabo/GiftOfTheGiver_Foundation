@@ -1,0 +1,102 @@
+﻿@page "/volunteer"
+@attribute [Authorize(Roles = "Volunteer")]
+@rendermode InteractiveServer
+
+@using GiftOfTheGiver_Foundation.Data
+@using GiftOfTheGiver_Foundation.Models
+@using Microsoft.AspNetCore.Authorization
+@using VolunteerModel = GiftOfTheGiver_Foundation.Models.Volunteer
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+
+<PageTitle>Volunteer</PageTitle>
+
+<div class="report-card">
+    <div class="card-header">
+        <h3 class="card-header-title">Become a Volunteer</h3>
+    </div>
+    <div class="card-body">
+        <p>Join our team by filling out your details below. Your time and skills can make a real difference.</p>
+
+        <EditForm Model="@volunteer" OnValidSubmit="@HandleSubmit" FormName="VolunteerForm">
+            <AntiforgeryToken />
+            <DataAnnotationsValidator />
+
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="alert alert-success" role="alert">
+                    @successMessage
+                </div>
+            }
+
+            <div class="mb-3">
+                <label for="volunteerName" class="form-label">Volunteer Full Name</label>
+                <InputText id="volunteerName" class="form-control" @bind-Value="volunteer.VolunteerName" placeholder="e.g., Sandra Lukeman" />
+                <ValidationMessage For="@(() => volunteer.VolunteerName)" />
+            </div>
+
+            <div class="mb-3">
+                <label for="volunteerEmail" class="form-label">Email Address</label>
+                <InputText id="volunteerEmail" type="email" class="form-control" @bind-Value="volunteer.VolunteerEmail" placeholder="e.g., sandra@example.com" />
+                <ValidationMessage For="@(() => volunteer.VolunteerEmail)" />
+            </div>
+            <div class="mb-3">
+                <label for="helpType" class="form-label">How would you like to help?</label>
+                <InputSelect id="helpType" class="form-select" @bind-Value="volunteer.HelpType">
+                    <option value="" selected disabled>Select an area...</option>
+                    <option value="Feeding Scheme">Feeding Scheme</option>
+                    <option valueF="Wildfire Conservation">Wildfire Conservation</option>
+                    <option value="Fundraising">Fundraising</option>
+                    <option value="Emergency Response">Emergency Response</option>
+                    <option value="Charitable Work">Charitable Work</option>
+                </InputSelect>
+                <ValidationMessage For="@(() => volunteer.HelpType)" />
+            </div>
+
+            <div class="mb-3">
+                <label for="volunteerContact" class="form-label">Volunteer Contact Number</label>
+                <InputText id="volunteerContact" class="form-control" @bind-Value="volunteer.VolunteerContact" placeholder="e.g., 0821234567" />
+                <ValidationMessage For="@(() => volunteer.VolunteerContact)" />
+            </div>
+
+            <div class="mb-3">
+                <label for="availability" class="form-label">Availability</label>
+                <InputSelect id="availability" class="form-select" @bind-Value="volunteer.Availability">
+                    <option value="" selected disabled>Select your availability...</option>
+                    <option value="Weekdays-All">Weekdays - all day</option>
+                    <option value="Weekdays-AM">Weekdays - 08:00am to 12:00am</option>
+                    <option value="Weekdays-PM">Weekdays - 13:00pm to 17:00</option>
+                    <option value="Saturday-All">Saturday - all day</option>
+                    <option value="Saturday-AM">Saturday - 08:00am to 12:00am</option>
+                    <option value="Saturday-PM">Saturday - 13:00pm to 17:00</option>
+                </InputSelect>
+                <ValidationMessage For="@(() => volunteer.Availability)" />
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="background-color: #588157; border: none;">Sign Up</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private VolunteerModel volunteer = new VolunteerModel();
+    private string? successMessage;
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            using var dbContext = DbFactory.CreateDbContext();
+            dbContext.Volunteers.Add(volunteer);
+            await dbContext.SaveChangesAsync();
+
+            successMessage = "Thank you for volunteering! We will be in touch soon.";
+            volunteer = new VolunteerModel();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving volunteer: {ex.Message}");
+            successMessage = "An error occurred while submitting your form. Please try again.";
+        }
+    }
+}

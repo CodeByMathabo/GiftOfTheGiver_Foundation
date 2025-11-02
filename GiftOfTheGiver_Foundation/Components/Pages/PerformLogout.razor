@@ -1,0 +1,22 @@
+﻿@page "/Account/PerformLogout"
+@using GiftOfTheGiver_Foundation.Data
+@using Microsoft.AspNetCore.Identity
+@rendermode InteractiveServer
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject NavigationManager NavigationManager
+
+<PageTitle>Log out</PageTitle>
+
+<p>Please wait, logging you out...</p>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        // This is the C# code that securely logs the user out
+        await SignInManager.SignOutAsync();
+
+        // This navigates back to the welcome page with a full page reload
+        NavigationManager.NavigateTo("/", forceLoad: true);
+    }
+}

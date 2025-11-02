@@ -1,0 +1,130 @@
+﻿@page "/disaster-reporting"
+@attribute [Authorize(Roles = "Volunteer")]
+@layout Components.Layout.MainLayout
+@rendermode InteractiveServer
+
+@using GiftOfTheGiver_Foundation.Data
+@using GiftOfTheGiver_Foundation.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject ILogger<DisasterReporting> Logger
+
+<PageTitle>Disaster Reporting</PageTitle>
+
+<div class="report-card">
+    <div class="card-header">
+        <h3 class="card-header-title">Incident Details</h3>
+    </div>
+    <div class="card-body">
+
+        <EditForm Model="@report" OnValidSubmit="@HandleSubmit" FormName="DisasterReportForm">
+            <AntiforgeryToken />
+            <DataAnnotationsValidator />
+
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="alert alert-success mt-3" role="alert">
+                    @successMessage
+                </div>
+            }
+
+            <div class="row g-3 align-items-center">
+                <div class="col-md-8">
+                    <label for="incidentType" class="form-label">Type of Incident</label>
+                    <InputSelect id="incidentType" class="form-select" @bind-Value="report.IncidentType">
+                        <option value="" selected disabled>Select a type...</option>
+                        <option value="Flood">Flood</option>
+                        <option value="Wildfire">Wildfire</option>
+                        <option value="Earthquake">Earthquake</option>
+                        <option value="Drought">Drought</option>
+                        <option value="Medical Emergency">Medical Emergency</option>
+                        <option value="Search and Rescue">Search and Rescue</option>
+                    </InputSelect>
+                    <ValidationMessage For="@(() => report.IncidentType)" />
+                </div>
+
+                <div class="col-md-4">
+                    <label for="urgencyLevel" class="form-label">Urgency Level</label>
+                    <InputSelect id="urgencyLevel" class="form-select" @bind-Value="report.UrgencyLevel">
+                        <option value="" selected disabled>Select urgency...</option>
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                    </InputSelect>
+                    <ValidationMessage For="@(() => report.UrgencyLevel)" />
+                </div>
+
+                <div class="col-md-6">
+                    <label for="incidentDate" class="form-label">Incident Date & Time <span class="required-field">(required)</span></label>
+                    <InputDate id="incidentDate" class="form-control" @bind-Value="report.IncidentDate" Type="InputDateType.DateTimeLocal" />
+                    <ValidationMessage For="@(() => report.IncidentDate)" />
+                </div>
+
+                <div class="col-md-6">
+                    <label for="address" class="form-label">Location</label>
+                    <InputText id="address" class="form-control" @bind-Value="report.Address" placeholder="e.g., 123 Madiba Street, Parliament Building" />
+                </div>
+
+                <div class="col-md-6">
+                    <label for="city" class="form-label">City / Surbub / Township</label>
+                    <InputText id="city" class="form-control" @bind-Value="report.City" placeholder="e.g., Cape Town" />
+                </div>
+
+                <div class="col-md-6">
+                    <label for="province" class="form-label">Province</label>
+                    <InputText id="province" class="form-control" @bind-Value="report.Province" placeholder="e.g., Western Cape" />
+                </div>
+
+                <div class="col-12">
+                    <label for="description" class="form-label">Detailed Description</label>
+                    <InputTextArea id="description" class="form-control" @bind-Value="report.Description" rows="5" placeholder="Describe the situation, potential number of people affected, and immediate needs." />
+                    <ValidationMessage For="@(() => report.Description)" />
+                </div>
+            </div>
+
+            <div class="form-footer" style="margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary" style="background-color: #588157; border: none;">Submit Report</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    // This private field will hold the data from the form
+    private DisasterReport report = new();
+
+    // This will hold our success message
+    private string? successMessage;
+
+    // Set a default value for the date/time picker
+    protected override void OnInitialized()
+    {
+        report.IncidentDate = DateTime.Now;
+    }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            // 1. Create a DbContext instance from the factory
+            await using var dbContext = await DbFactory.CreateDbContextAsync();
+
+            // 2. Add the 'report' object to the DbContext
+            dbContext.DisasterReports.Add(report);
+
+            // 3. Save the changes to the database
+            await dbContext.SaveChangesAsync();
+
+            // 4. Set a success message and clear the form
+            successMessage = "Thank you. Your disaster report has been submitted successfully.";
+            report = new DisasterReport { IncidentDate = DateTime.Now }; // Reset the form with default date
+        }
+        catch (Exception ex)
+        {
+            // Log the error (visible in your application's console output)
+            Logger.LogError(ex, "Error saving disaster report.");
+            successMessage = "An error occurred while submitting your report. Please try again.";
+        }
+    }
+}

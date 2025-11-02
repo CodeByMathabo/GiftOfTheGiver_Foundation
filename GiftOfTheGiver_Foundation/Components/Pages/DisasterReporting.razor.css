@@ -1,0 +1,27 @@
+﻿/* Styles ONLY for the Disaster Reporting screen */
+.required-field {
+    color: #2D6A4F;
+    font-weight: 400;
+    font-size: 0.875em;
+}
+
+.btn-group-toggle {
+    display: flex;
+    width: 100%;
+}
+
+.btn-urgency {
+    flex: 1;
+    background-color: #f8f9fa;
+    border: 1px solid #2D6A4F;
+    color: #495057;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.btn-urgency-active {
+    flex: 1;
+    background-color: #e67e22;
+    border-color: #2D6A4F;
+    color: #ffffff;
+    z-index: 2;
+}
