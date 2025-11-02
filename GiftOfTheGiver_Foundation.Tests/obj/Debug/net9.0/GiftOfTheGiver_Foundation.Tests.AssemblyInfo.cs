@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GiftOfTheGiver_Foundation.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fc0d0f6b080481b05fd8b2686784621527ed3a7a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f1c2f6ebdfe08072f2936d689679b50a9164c2dd")]
 [assembly: System.Reflection.AssemblyProductAttribute("GiftOfTheGiver_Foundation.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GiftOfTheGiver_Foundation.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
