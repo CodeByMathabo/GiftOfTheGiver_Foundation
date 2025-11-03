@@ -142,18 +142,18 @@ using (var scope = app.Services.CreateScope())
     }
 
     // Create a default Admin user
-    var adminUser = await userManager.FindByEmailAsync("admin@example.com");
+    var adminUser = await userManager.FindByEmailAsync("motaung20mathabo@gmail.com");
     if (adminUser == null)
     {
         var newAdminUser = new ApplicationUser
         {
-            UserName = "admin@example.com",
-            Email = "admin@example.com",
+            UserName = "motaung20mathabo@gmail.com",
+            Email = "motaung20mathabo@gmail.com",
             EmailConfirmed = true // Confirm email immediately for admin
         };
 
         // !! CHANGE THIS PASSWORD to something secure
-        var result = await userManager.CreateAsync(newAdminUser, "StrongAdminP@ssw0rd!");
+        var result = await userManager.CreateAsync(newAdminUser, "ADMIN_PASSWORD_PLACEHOLDER");
 
         if (result.Succeeded)
         {
