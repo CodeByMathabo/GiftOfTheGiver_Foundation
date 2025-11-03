@@ -152,7 +152,7 @@ using (var scope = app.Services.CreateScope())
             EmailConfirmed = true // Confirm email immediately for admin
         };
 
-        // !! CHANGE THIS PASSWORD to something secure
+        //  Admin PASSWORD
         var result = await userManager.CreateAsync(newAdminUser, "ADMIN_PASSWORD_PLACEHOLDER");
 
         if (result.Succeeded)
