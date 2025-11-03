@@ -32,11 +32,11 @@
 -----------------------------------------------------------------------
 ### **Access guideline for the Administrator:**
 * **Important:** You cannot register an admin. Admins are grated access to the system by other existing admins.
-* 
+  
 * Only existing admins have the ability to promote volunteers to become fellow admins in the Team page
-* 
+  
 * Only exisitng admins have the ability to demote fellow admins in the Team page
-* 
+  
 * **Fact:** When the app was ran for the first time, admin credentials where entered in the backend, and that is how the first admin user role was created
 
 -----------------------------------------------------------------------
