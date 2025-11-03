@@ -128,6 +128,9 @@ using (var scope = app.Services.CreateScope())
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
+    // --- NEW: Get the IConfiguration service ---
+    var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+
     string[] roleNames = { "Admin", "Donor", "Volunteer" };
     IdentityResult roleResult;
 
@@ -136,12 +139,11 @@ using (var scope = app.Services.CreateScope())
         var roleExist = await roleManager.RoleExistsAsync(roleName);
         if (!roleExist)
         {
-            // Create the roles and seed them to the database
             roleResult = await roleManager.CreateAsync(new IdentityRole(roleName));
         }
     }
 
-    // Create a default Admin user
+    // --- real admin email ---
     var adminUser = await userManager.FindByEmailAsync("motaung20mathabo@gmail.com");
     if (adminUser == null)
     {
@@ -149,16 +151,30 @@ using (var scope = app.Services.CreateScope())
         {
             UserName = "motaung20mathabo@gmail.com",
             Email = "motaung20mathabo@gmail.com",
-            EmailConfirmed = true // Confirm email immediately for admin
+            EmailConfirmed = true
         };
 
-        //  Admin PASSWORD
-        var result = await userManager.CreateAsync(newAdminUser, "ADMIN_PASSWORD_PLACEHOLDER");
+        // Get the password from Azure, not from code ---
+        var adminPassword = configuration["DefaultAdminPassword"];
+
+        if (string.IsNullOrEmpty(adminPassword))
+        {
+            // This will stop the app if the password isn't set in Azure
+            throw new InvalidOperationException("DefaultAdminPassword is not set in application settings. Cannot seed admin user.");
+        }
+
+        // Use the password from Azure to create the user
+        var result = await userManager.CreateAsync(newAdminUser, adminPassword);
 
         if (result.Succeeded)
         {
-            // Assign the 'Admin' role
             await userManager.AddToRoleAsync(newAdminUser, "Admin");
+        }
+        else
+        {
+            // This helps debug if the password is too weak
+            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+            Console.WriteLine($"Failed to create admin user: {errors}");
         }
     }
 }
